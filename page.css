@@ -1,0 +1,33 @@
+body {
+  margin: 0;
+}
+#box {
+  height: 700px;
+  display: -webkit-box;
+  -webkit-box-orient: horizontal;
+}
+#source {
+  padding: 8px 2px;
+  width: 600px;
+  height: 100%;
+  background: #570f33;
+  color: #fff;
+  font-family: monospace;
+}
+#result {
+  width: 700px;
+  height: 100%;
+  background: #f1eaed;
+}
+.atom {
+  display: inline;
+  background: #f0c0a8;
+  padding: 4px;
+  margin: 4px;
+}
+.exp {
+  margin: 4px;
+  padding: 4px;
+  margin-left: 10px;
+  border: 1px solid #000;
+}

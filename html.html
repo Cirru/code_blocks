@@ -1,0 +1,12 @@
+<html><head><title>Blocks</title><meta charset="utf-8"/><link rel="stylesheet" href="page.css"/><script src="/projects/textareaEditor/textareaEditor.js?js"></script><script src="convert.js"></script></head><body><div id="box"><textarea id="source">(define (collatz n org steps)
+    (cond ((= n 1) (+ 1 1)) 
+          ((even? n) (collatz (/ n 2) org (+ steps 1)))
+          (else (collatz (+ 1 (* 3 n)) org (+ steps 1)))))
+
+(define (coller n)
+        (collatz n n 0)
+        (if (< n 25000)
+            (coller (+ n 1))
+            (write "done")))
+
+(coller 1)</textarea><div id="result"></div></div></body></html>
