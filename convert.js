@@ -214,7 +214,37 @@ blank = function() {
 };
 
 esc = function() {
-  return '';
+  var recurse;
+  if (__indexOf.call(store, curse) >= 0) {
+    return 'top level.. dont do enything';
+  }
+  recurse = function(arr) {
+    var copy, curse_place, item, _i, _len;
+    copy = [];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
+      if (Array.isArray(item)) {
+        if (__indexOf.call(item, curse) >= 0) {
+          copy.push(item.filter(function(x) {
+            return x !== curse;
+          }));
+          copy.push(curse);
+        } else {
+          copy.push(recurse(item));
+        }
+      } else {
+        curse_place = item.indexOf(curse);
+        if (curse_place === -1) {
+          copy.push(item);
+        } else {
+          copy.push(item.slice(0, curse_place).concat(item.slice(curse_place + 1)));
+          copy.push(curse);
+        }
+      }
+    }
+    return copy;
+  };
+  return store = recurse(store);
 };
 
 left = function() {
@@ -232,6 +262,13 @@ up = function() {
 down = function() {
   return '';
 };
+
+/* beyond demo on this page
+save = -> ''
+import = -> ''
+export = -> ''
+*/
+
 
 control = {
   '8': cancel,

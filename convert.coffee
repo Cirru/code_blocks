@@ -124,9 +124,27 @@ enter = ->
 
 blank = ->
   input ' '
-  
+
 esc = ->
-  ''
+  if curse in store
+    return 'top level.. dont do enything'
+  recurse = (arr) ->
+    copy = []
+    for item in arr
+      if Array.isArray item
+        if curse in item
+          copy.push item.filter (x) -> x isnt curse
+          copy.push curse
+        else copy.push (recurse item)
+      else
+        curse_place = item.indexOf curse
+        if curse_place is -1 then copy.push item
+        else 
+          copy.push (item[...curse_place].concat item[curse_place+1..])
+          copy.push curse
+    copy
+  store = recurse store
+
 left = ->
   ''
 right = ->
@@ -135,6 +153,12 @@ up = ->
   ''
 down = ->
   ''
+
+### beyond demo on this page
+save = -> ''
+import = -> ''
+export = -> ''
+###
 
 control =
   '8':  cancel
