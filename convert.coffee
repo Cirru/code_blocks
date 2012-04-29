@@ -20,6 +20,17 @@ draw = (arr) ->
       str+= "<span>#{item}</span>"
   "<div>#{str}</div>"
 
+control =
+  '8':  cancel
+  '13': enter
+  '32': space
+  '9':  tab
+  '27': esc
+  '37': left
+  '39': right
+  '38': up
+  '40': down
+
 window.onload = ->
   box = tag 'box'
   nothing = tag 'nothing'
@@ -37,33 +48,8 @@ window.onload = ->
     return false
   nothing.onkeydown = (e) ->
     code = e.keyCode
-    console.log code
-    switch code
-      when 8
-        console.log 'cancel'
-        do cancel
-        do refresh
-        false
-      when 13
-        console.log 'enter'
-        do enter
-        do refresh
-        false
-      when 32
-        console.log 'space'
-        do space
-        do refresh
-        false
-      when 9
-        console.log 'tab'
-        do blank
-        do refresh
-        false
-      when 27
-        console.log 'esc'
-        do esc
-        do refresh
-        false
+    if control[String code]?
+      do control(String code)
 
 store = ['45345', '345345', ['444\t']]
 
@@ -91,4 +77,14 @@ space = ->
 blank = ->
   ''
 esc = ->
+  ''
+left = ->
+  ''
+right = ->
+  ''
+up = ->
+  ''
+down = ->
+  ''
+tab = ->
   ''
