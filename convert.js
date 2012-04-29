@@ -177,7 +177,36 @@ space = function() {
 };
 
 enter = function() {
-  return ll('enter was called');
+  var recurse;
+  recurse = function(arr) {
+    var copy, curse_place, item, _i, _len;
+    if (__indexOf.call(arr, curse) >= 0) {
+      return arr.map(function(x) {
+        if (x === curse) {
+          return [x];
+        } else {
+          return x;
+        }
+      });
+    }
+    copy = [];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
+      if (Array.isArray(item)) {
+        copy.push(recurse(item));
+      } else {
+        curse_place = item.indexOf(curse);
+        if (curse_place === -1) {
+          copy.push(item);
+        } else {
+          copy.push(item.slice(0, curse_place).concat(item.slice(curse_place + 1)));
+          copy.push([curse]);
+        }
+      }
+    }
+    return copy;
+  };
+  return store = recurse(store);
 };
 
 blank = function() {

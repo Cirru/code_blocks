@@ -106,9 +106,25 @@ space = ->
   store = recurse store
 
 enter = ->
-  ll 'enter was called'
+  recurse = (arr) ->
+    if curse in arr
+      return arr.map (x) ->
+        if x is curse then [x] else x
+    copy = []
+    for item in arr
+      if Array.isArray item then copy.push (recurse item)
+      else 
+        curse_place = item.indexOf curse
+        if curse_place is -1 then copy.push item
+        else 
+          copy.push (item[...curse_place].concat item[curse_place+1..])
+          copy.push [curse]
+    copy
+  store = recurse store
+
 blank = ->
   input ' '
+  
 esc = ->
   ''
 left = ->
