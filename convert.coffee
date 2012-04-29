@@ -8,22 +8,22 @@ available_chars+= '1234567890!@#$%^&*()'
 available_chars+= '~`_-+-[]{}\\|:;"\',.<>/?'
 add_inputs = available_chars.split ''
 
+curse = '\t'
+render_curse = '<nav>&nbsp;</nav>'
 draw = (arr) ->
   str = ''
   for item in arr
-    console.log item
     if typeof item is 'object'
       str+= draw item
-    else if item is '\t'
-      console.log 'xxxxx'
-      str+= '<nav>&nbsp;</nav>'
     else
+      item = item.replace curse, render_curse
       str+= "<span>#{item}</span>"
   "<div>#{str}</div>"
 
 window.onload = ->
   box = tag 'box'
   nothing = tag 'nothing'
+  nothing.focus()
 
   do refresh = ->
     box.innerHTML = draw store
@@ -65,22 +65,28 @@ window.onload = ->
         do refresh
         false
 
-store = [1, 2, [[1,[3, 4, 5],3],'\t', 3, [2,3,4]]]
+store = ['45345', '345345', ['444\t']]
 
 input = (char) ->
   reverse = (arr) ->
-    coll = []
+    copy = []
     for item in arr
-      if typeof item is 'object' then coll.push (reverse item)
-      else if item is '\t'       then coll.push char, '\t'
-      else                            coll.push item
-    coll
+      if typeof item is 'object'
+        copy.push reverse item
+      else
+        coll = ''
+        for c in item
+          if c is curse
+            coll+= char
+          coll+= c
+        copy.push coll
+    return copy
   store = reverse store
+cancel = ->
+  ''
 enter = ->
   ''
 space = ->
-  ''
-cancel = ->
   ''
 blank = ->
   ''

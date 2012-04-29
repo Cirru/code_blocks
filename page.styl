@@ -13,7 +13,7 @@ body
   height 100%
   position absolute
   float left
-  background hsla(330,80%,20%,0.3)
+  background hsla(330,80%,20%,0)
   resize none
 
 span
@@ -25,9 +25,20 @@ div
   border-left solid 1px black
 
 nav
-  width 20px
   display inline
   height 20px
-  background red
+  background black
   margin 0px 6px
-  padding 4px 6px
+  padding 4px 2px
+  
+  -webkit-animation-name: breathingLight;
+  -webkit-animation-duration: 3s;
+  -webkit-animation-iteration-count: infinite;
+
+@-webkit-keyframes breathingLight
+  from
+    -webkit-box-shadow 0 0 10px #fff
+  50%
+    -webkit-box-shadow 0 0 10px #000
+  to
+    -webkit-box-shadow 0 0 10px #fff

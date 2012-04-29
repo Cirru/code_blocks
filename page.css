@@ -12,7 +12,7 @@ body {
   height: 100%;
   position: absolute;
   float: left;
-  background: rgba(92,10,51,0.3);
+  background: rgba(92,10,51,0);
   resize: none;
 }
 span {
@@ -25,10 +25,25 @@ div {
   border-left: solid 1px #000;
 }
 nav {
-  width: 20px;
   display: inline;
   height: 20px;
-  background: #f00;
+  background: #000;
   margin: 0px 6px;
-  padding: 4px 6px;
+  padding: 4px 2px;
+  -webkit-animation-name: breathingLight;
+  -webkit-animation-duration: 3s;
+  -webkit-animation-iteration-count: infinite;
+}
+@-webkit-keyframes breathingLight {
+  0% {
+    -webkit-box-shadow: 0 0 10px #fff;
+  }
+
+  50% {
+    -webkit-box-shadow: 0 0 10px #000;
+  }
+
+  100% {
+    -webkit-box-shadow: 0 0 10px #fff;
+  }
 }
