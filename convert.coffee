@@ -14,6 +14,9 @@ draw = (arr) ->
     console.log item
     if typeof item is 'object'
       str+= draw item
+    else if item is '\t'
+      console.log 'xxxxx'
+      str+= '<nav>&nbsp;</nav>'
     else
       str+= "<span>#{item}</span>"
   "<div>#{str}</div>"
@@ -56,9 +59,14 @@ window.onload = ->
         do blank
         do refresh
         false
+      when 27
+        console.log 'esc'
+        do esc
+        do refresh
+        false
 
-store = [1, 2, [[1,[3, 4, 5],3], 3, [2,3,4]]]
-point = [0]
+store = [1, 2, [[1,[3, 4, 5],3],'\t', 3, [2,3,4]]]
+
 input = (char) ->
   store.push char
 enter = ->
@@ -68,4 +76,6 @@ space = ->
 cancel = ->
   ''
 blank = ->
+  ''
+esc = ->
   ''

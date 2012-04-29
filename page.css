@@ -24,3 +24,11 @@ div {
   margin: 20px;
   border-left: solid 1px #000;
 }
+nav {
+  width: 20px;
+  display: inline;
+  height: 20px;
+  background: #f00;
+  margin: 0px 6px;
+  padding: 4px 6px;
+}
