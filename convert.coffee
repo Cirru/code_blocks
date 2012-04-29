@@ -97,10 +97,10 @@ space = ->
     for item in arr
       if Array.isArray item then copy.push (recurse item)
       else 
-        curse_index = item.indexOf curse
-        if curse_index is -1 then copy.push item
+        curse_place = item.indexOf curse
+        if curse_place is -1 then copy.push item
         else 
-          copy.push (item[...curse_index].concat item[curse_index+1...])
+          copy.push (item[...curse_place].concat item[curse_place+1..])
           copy.push curse
     copy
   store = recurse store
@@ -108,7 +108,7 @@ space = ->
 enter = ->
   ll 'enter was called'
 blank = ->
-  ''
+  input ' '
 esc = ->
   ''
 left = ->
@@ -119,14 +119,12 @@ up = ->
   ''
 down = ->
   ''
-tab = ->
-  input ' '
 
 control =
   '8':  cancel
   '13': enter
   '32': space
-  '9':  tab
+  '9':  blank
   '27': esc
   '37': left
   '39': right
