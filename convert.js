@@ -29,6 +29,8 @@ draw = function(arr) {
     item = arr[_i];
     if (typeof item === 'object') {
       str += draw(item);
+    } else if (item === curse) {
+      str += render_curse;
     } else {
       item = item.replace(curse, render_curse);
       str += "<span>" + item + "</span>";
@@ -76,7 +78,7 @@ window.onload = function() {
   };
 };
 
-store = ['45345', '345345', ['444\t']];
+store = ['45345', '345345', '\t', ['444\t']];
 
 input = function(char) {
   var reverse;
@@ -87,6 +89,8 @@ input = function(char) {
       item = arr[_i];
       if (typeof item === 'object') {
         copy.push(reverse(item));
+      } else if (item === curse) {
+        copy.push("" + char + curse);
       } else {
         coll = '';
         for (_j = 0, _len1 = item.length; _j < _len1; _j++) {

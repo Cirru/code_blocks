@@ -15,6 +15,8 @@ draw = (arr) ->
   for item in arr
     if typeof item is 'object'
       str+= draw item
+    else if item is curse
+      str+= render_curse
     else
       item = item.replace curse, render_curse
       str+= "<span>#{item}</span>"
@@ -51,7 +53,7 @@ window.onload = ->
     if control[String code]?
       do control(String code)
 
-store = ['45345', '345345', ['444\t']]
+store = ['45345', '345345', '\t', ['444\t']]
 
 input = (char) ->
   reverse = (arr) ->
@@ -59,6 +61,8 @@ input = (char) ->
     for item in arr
       if typeof item is 'object'
         copy.push reverse item
+      else if item is curse
+        copy.push "#{char}#{curse}"
       else
         coll = ''
         for c in item
