@@ -399,12 +399,65 @@ right = function() {
   return store = reverse(store);
 };
 
-up = function() {
-  return '';
+down = function() {
+  var copy_tail, item, recursion, _i, _len;
+  copy_tail = store.concat().reverse();
+  for (_i = 0, _len = copy_tail.length; _i < _len; _i++) {
+    item = copy_tail[_i];
+    if (Array.isArray(item)) {
+      break;
+    }
+    if (item === cursor || item === [cursor]) {
+      return 'no need';
+    }
+    if (item.match(new RegExp(cursor)) != null) {
+      return 'yeah';
+    }
+  }
+  recursion = function(arr) {
+    var copy, has_cursor, item, obj, _j, _len1;
+    console.log('evenry time begin:: ', arr);
+    copy = [];
+    has_cursor = false;
+    for (_j = 0, _len1 = arr.length; _j < _len1; _j++) {
+      item = arr[_j];
+      if (item === cursor || item === [cursor]) {
+        has_cursor = true;
+      } else if (typeof item === 'string') {
+        if (item.match(new RegExp(cursor)) != null) {
+          copy.push(item.replace(new RegExp(cursor), ''));
+          has_cursor = true;
+        } else {
+          copy.push(item);
+        }
+      } else {
+        console.log('else... ', item);
+        if (has_cursor) {
+          item.unshift(cursor);
+          copy.push(item);
+          has_cursor = false;
+        } else {
+          obj = recursion(item);
+          copy.push(obj.value);
+          if (obj.has_cursor) {
+            copy.push(cursor);
+          }
+        }
+      }
+    }
+    return obj = {
+      value: copy,
+      has_cursor: has_cursor
+    };
+  };
+  store = (recursion(store)).value;
+  return console.log('result: ', store);
 };
 
-down = function() {
-  return '';
+up = function() {
+  store = reverse(store);
+  down();
+  return store = reverse(store);
 };
 
 /* beyond demo on this page

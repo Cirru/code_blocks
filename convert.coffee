@@ -232,10 +232,45 @@ right = ->
   store = reverse store
   do left
   store = reverse store
-up = ->
-  ''
+
 down = ->
-  ''
+  copy_tail = store.concat().reverse()
+  for item in copy_tail
+    if Array.isArray item then break
+    if item in [cursor, [cursor]] then return 'no need'
+    if item.match(new RegExp cursor)? then return 'yeah'
+  recursion = (arr) ->
+    console.log 'evenry time begin:: ', arr
+    copy = []
+    has_cursor = no
+    for item in arr
+      if item in [cursor, [cursor]] then has_cursor = yes
+      else if typeof item is 'string'
+        if item.match(new RegExp cursor)?
+          copy.push item.replace((new RegExp cursor), '')
+          has_cursor = yes
+        else copy.push item
+      else
+        console.log 'else... ', item
+        if has_cursor
+          item.unshift cursor
+          copy.push item
+          has_cursor = off
+        else
+          obj = recursion item
+          copy.push obj.value
+          if obj.has_cursor then copy.push cursor
+    obj =
+      value: copy
+      has_cursor: has_cursor
+  store = (recursion store).value
+  console.log 'result: ', store
+
+up = ->
+  store = reverse store
+  do down
+  store = reverse store
+
 ### beyond demo on this page
 save = -> ''
 import = -> ''
