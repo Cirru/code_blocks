@@ -90,7 +90,23 @@ window.onload = function() {
 store = [1, 2, [[1, [3, 4, 5], 3], '\t', 3, [2, 3, 4]]];
 
 input = function(char) {
-  return store.push(char);
+  var reverse;
+  reverse = function(arr) {
+    var coll, item, _i, _len;
+    coll = [];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
+      if (typeof item === 'object') {
+        coll.push(reverse(item));
+      } else if (item === '\t') {
+        coll.push(char, '\t');
+      } else {
+        coll.push(item);
+      }
+    }
+    return coll;
+  };
+  return store = reverse(store);
 };
 
 enter = function() {

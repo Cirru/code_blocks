@@ -7,8 +7,14 @@ coffee_file = 'convert.coffee'
 jade_file   = 'html.jade'
 stylus_file = 'page.styl'
 
-fs.watchFile coffee_file, ->
-  spawn 'coffee', ['-bc', coffee_file]
+fs.watchFile coffee_file, (e) ->
+  return '' if e.size is 0
+  result = spawn 'coffee', ['-bc', coffee_file]
+  msg = ''
+  result.stderr.on 'data', (str) ->
+    msg+= str
+  result.stderr.on 'end', ->
+    console.log 'msg: ', msg
   print "!! #{coffee_file}\n"
 
 fs.watchFile jade_file, ->

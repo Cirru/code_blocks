@@ -68,7 +68,14 @@ window.onload = ->
 store = [1, 2, [[1,[3, 4, 5],3],'\t', 3, [2,3,4]]]
 
 input = (char) ->
-  store.push char
+  reverse = (arr) ->
+    coll = []
+    for item in arr
+      if typeof item is 'object' then coll.push (reverse item)
+      else if item is '\t'       then coll.push char, '\t'
+      else                            coll.push item
+    coll
+  store = reverse store
 enter = ->
   ''
 space = ->
