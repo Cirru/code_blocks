@@ -220,15 +220,18 @@ esc = function() {
     return 'top level.. dont do enything';
   }
   recursion = function(arr) {
-    var copy, cursor_place, item, _i, _len;
+    var copy, cursor_place, item, last_item, _i, _len;
     copy = [];
     for (_i = 0, _len = arr.length; _i < _len; _i++) {
       item = arr[_i];
       if (Array.isArray(item)) {
         if (__indexOf.call(item, cursor) >= 0) {
-          copy.push(item.filter(function(x) {
+          last_item = item.filter(function(x) {
             return x !== cursor;
-          }));
+          });
+          if (last_item.length > 0) {
+            copy.push(last_item);
+          }
           copy.push(cursor);
         } else {
           copy.push(recursion(item));
@@ -254,7 +257,7 @@ home = function() {
     return 'top level, nothing to do';
   }
   recursion = function(arr) {
-    var copy, find_cursor, item, _i, _len;
+    var copy, find_cursor, item, _i, _len, _ref;
     if (__indexOf.call(arr, cursor) >= 0 && (arr[0] !== cursor)) {
       return [cursor].concat(arr.filter(function(x) {
         return x !== cursor;
@@ -264,7 +267,8 @@ home = function() {
     for (_i = 0, _len = arr.length; _i < _len; _i++) {
       item = arr[_i];
       if (item[0] === cursor) {
-        copy.push(cursor, item.slice(1));
+        copy.push(cursor);
+        copy.push((item.slice(1) === (_ref = item.length) && _ref > 1));
       } else {
         if (Array.isArray(item)) {
           copy.push(recursion(item));
@@ -348,7 +352,10 @@ left = function() {
       item = arr[_i];
       if (Array.isArray(item)) {
         if (item[0] === cursor) {
-          copy.push(cursor, item.slice(1));
+          copy.push(cursor);
+          if (item.length > 1) {
+            copy.push(item.slice(1));
+          }
         } else {
           copy.push(recursion(item));
         }
@@ -356,7 +363,7 @@ left = function() {
         console.log('copy: ', copy);
         last_item = copy.pop();
         if (Array.isArray(last_item)) {
-          last_item = last_item.push(cursor);
+          last_item.push(cursor);
           copy.push(last_item);
         } else {
           copy.push("" + last_item + cursor);
@@ -364,7 +371,10 @@ left = function() {
       } else {
         console.log('all strings', item);
         if (item[0] === cursor) {
-          copy.push(cursor, item.slice(1));
+          copy.push(cursor);
+          if (item.length > 1) {
+            copy.push(item.slice(1));
+          }
         } else {
           find_cursor = item.match(new RegExp(cursor));
           console.log('find? ', find_cursor);

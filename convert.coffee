@@ -134,7 +134,8 @@ esc = ->
     for item in arr
       if Array.isArray item
         if cursor in item
-          copy.push item.filter (x) -> x isnt cursor
+          last_item = item.filter (x) -> x isnt cursor
+          if last_item.length > 0 then copy.push last_item
           copy.push cursor
         else copy.push (recursion item)
       else
@@ -154,7 +155,9 @@ home = ->
       return [cursor].concat arr.filter (x) -> x isnt cursor
     copy = []
     for item in arr
-      if item[0] is cursor then copy.push cursor, item[1..]
+      if item[0] is cursor
+        copy.push cursor
+        copy.push item[1..] is item.length > 1
       else
         if Array.isArray item then copy.push (recursion item)
         else 
@@ -198,18 +201,22 @@ left = ->
     copy = []
     for item in arr
       if Array.isArray item
-        if item[0] is cursor then copy.push cursor, item[1..]
+        if item[0] is cursor
+          copy.push cursor
+          copy.push item[1..] if item.length > 1
         else copy.push (recursion item)
       else if item is cursor
         console.log 'copy: ', copy
         last_item = copy.pop()
         if Array.isArray last_item
-          last_item = last_item.push cursor
+          last_item.push cursor
           copy.push last_item
         else copy.push "#{last_item}#{cursor}"
       else
         console.log 'all strings', item
-        if item[0] is cursor then copy.push cursor, item[1..]
+        if item[0] is cursor
+          copy.push cursor
+          copy.push item[1..] if item.length > 1
         else
           find_cursor = item.match (new RegExp cursor)
           console.log 'find? ', find_cursor
