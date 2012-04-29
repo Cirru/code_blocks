@@ -12,17 +12,17 @@ available_chars+= '1234567890!@#$%^&*()'
 available_chars+= '~`_-+-[]{}\\|:;"\',.<>/?'
 add_inputs = available_chars.split ''
 
-curse = '\t'
-render_curse = '<nav>&nbsp;</nav>'
+cursor = '\t'
+render_cursor = '<nav>&nbsp;</nav>'
 draw = (arr) ->
   str = ''
   for item in arr
     if Array.isArray item
       str+= draw item
-    else if item is curse
-      str+= render_curse
+    else if item is cursor
+      str+= render_cursor
     else
-      item = item.replace(curse, render_curse)
+      item = item.replace(cursor, render_cursor)
         .replace(/\s/g, '&nbsp;')
       str+= "<code>#{item}</code>"
   "<div>#{str}</div>"
@@ -53,148 +53,178 @@ window.onload = ->
 store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
 
 input = (char) ->
-  recurse = (arr) ->
+  recursion = (arr) ->
     copy = []
     for item in arr
       if Array.isArray item
-        copy.push (recurse item)
-      else if item is curse then copy.push "#{char}#{curse}"
+        copy.push (recursion item)
+      else if item is cursor then copy.push "#{char}#{cursor}"
       else
         coll = ''
         for c in item
-          coll+= char if c is curse
+          coll+= char if c is cursor
           coll+= c
         copy.push coll
     copy
-  store = recurse store
+  store = recursion store
 
 cancel = ->
   console.log 'called to cancel'
-  if store[0] is curse
+  if store[0] is cursor
     return 'nothing to do'
-  recurse = (arr) ->
-    if curse in arr
-      return curse if arr[0] is curse
-      curse_place = arr.indexOf curse
-      arr = arr[...curse_place-1].concat arr[curse_place..]
+  recursion = (arr) ->
+    if cursor in arr
+      return cursor if arr[0] is cursor
+      cursor_place = arr.indexOf cursor
+      arr = arr[...cursor_place-1].concat arr[cursor_place..]
       return arr
     copy = []
     for item in arr
       if Array.isArray item
-        copy.push (recurse item)
+        copy.push (recursion item)
       else
-        return curse if item[0] is curse
+        return cursor if item[0] is cursor
         coll = ''
         for c in item
-          if c is curse then coll = coll[...-1]
+          if c is cursor then coll = coll[...-1]
           coll+= c
         copy.push coll
     copy
-  store = recurse store
+  store = recursion store
 
 space = ->
-  recurse = (arr) ->
+  recursion = (arr) ->
     copy = []
     for item in arr
-      if Array.isArray item then copy.push (recurse item)
+      if Array.isArray item then copy.push (recursion item)
       else 
-        curse_place = item.indexOf curse
-        if curse_place is -1 then copy.push item
+        cursor_place = item.indexOf cursor
+        if cursor_place is -1 then copy.push item
         else 
-          copy.push item.replace(curse, '')
-          copy.push curse
+          copy.push item.replace(cursor, '')
+          copy.push cursor
     copy
-  store = recurse store
+  store = recursion store
 
 enter = ->
-  recurse = (arr) ->
-    if curse in arr
+  recursion = (arr) ->
+    if cursor in arr
       return arr.map (x) ->
-        if x is curse then [x] else x
+        if x is cursor then [x] else x
     copy = []
     for item in arr
-      if Array.isArray item then copy.push (recurse item)
+      if Array.isArray item then copy.push (recursion item)
       else 
-        curse_place = item.indexOf curse
-        if curse_place is -1 then copy.push item
+        cursor_place = item.indexOf cursor
+        if cursor_place is -1 then copy.push item
         else 
-          copy.push item.replace(curse, '')
-          copy.push [curse]
+          copy.push item.replace(cursor, '')
+          copy.push [cursor]
     copy
-  store = recurse store
+  store = recursion store
 
 blank = ->
   input ' '
 
 esc = ->
-  if curse in store
+  if cursor in store
     return 'top level.. dont do enything'
-  recurse = (arr) ->
+  recursion = (arr) ->
     copy = []
     for item in arr
       if Array.isArray item
-        if curse in item
-          copy.push item.filter (x) -> x isnt curse
-          copy.push curse
-        else copy.push (recurse item)
+        if cursor in item
+          copy.push item.filter (x) -> x isnt cursor
+          copy.push cursor
+        else copy.push (recursion item)
       else
-        curse_place = item.indexOf curse
-        if curse_place is -1 then copy.push item
+        cursor_place = item.indexOf cursor
+        if cursor_place is -1 then copy.push item
         else 
-          copy.push item.replace(curse, '')
-          copy.push curse
+          copy.push item.replace(cursor, '')
+          copy.push cursor
     copy
-  store = recurse store
+  store = recursion store
 
 home = ->
-  if store[0]? and store[0] is curse
+  if store[0]? and store[0] is cursor
     return 'top level, nothing to do'
-  recurse = (arr) ->
-    if curse in arr and (arr[0] isnt curse)
-      return [curse].concat arr.filter (x) -> x isnt curse
+  recursion = (arr) ->
+    if cursor in arr and (arr[0] isnt cursor)
+      return [cursor].concat arr.filter (x) -> x isnt cursor
     copy = []
     for item in arr
-      if item[0] is curse then copy.push curse, item[1..]
+      if item[0] is cursor then copy.push cursor, item[1..]
       else
-        if Array.isArray item then copy.push (recurse item)
+        if Array.isArray item then copy.push (recursion item)
         else 
-          find_curse = item.match (new RegExp curse)
-          if find_curse?
-            copy.push "#{curse}#{item.replace(curse, '')}"
+          find_cursor = item.match (new RegExp cursor)
+          if find_cursor?
+            copy.push "#{cursor}#{item.replace(cursor, '')}"
           else copy.push item
     copy
-  store = recurse store
+  store = recursion store
+
+reverse = (arr) ->
+  copy = []
+  for item in arr.reverse()
+    if Array.isArray item then copy.push (reverse item)
+    else 
+      coll = ''
+      coll+= c for c in item.split('').reverse()
+      copy.push coll
+  copy
 
 end = ->
-  reverse = (arr) ->
-    copy = []
-    for item in arr.reverse()
-      if Array.isArray item then copy.push (reverse item)
-      else 
-        coll = ''
-        coll+= c for c in item.split('').reverse()
-        copy.push coll
-    copy
   store = reverse store
   do home
   store = reverse store
 
 remove  = ->
-  if curse in store
-    store = [curse]
+  if cursor in store
+    store = [cursor]
     return 'done'
-  recurse = (arr) ->
+  recursion = (arr) ->
     arr.map (x) ->
       if Array.isArray x
-        return if curse in x then curse else (recurse x)
+        return if cursor in x then cursor else (recursion x)
       else
-        if x.match(new RegExp curse)? then curse else x
-  store = recurse store
+        if x.match(new RegExp cursor)? then cursor else x
+  store = recursion store
 
 left = ->
-  ''
+  if store[0] is cursor then return 'ok'
+  recursion = (arr) ->
+    copy = []
+    for item in arr
+      if Array.isArray item
+        if item[0] is cursor then copy.push cursor, item[1..]
+        else copy.push (recursion item)
+      else if item is cursor
+        console.log 'copy: ', copy
+        last_item = copy.pop()
+        if Array.isArray last_item
+          last_item = last_item.push cursor
+          copy.push last_item
+        else copy.push "#{last_item}#{cursor}"
+      else
+        console.log 'all strings', item
+        if item[0] is cursor then copy.push cursor, item[1..]
+        else
+          find_cursor = item.match (new RegExp cursor)
+          console.log 'find? ', find_cursor
+          unless find_cursor? then copy.push item
+          else 
+            console.log 'item to swap: ', item
+            swapit = new RegExp "(.)#{cursor}"
+            copy.push item.replace(swapit, "#{cursor}$1")
+    copy
+  store = recursion store
+
 right = ->
-  ''
+  store = reverse store
+  do left
+  store = reverse store
 up = ->
   ''
 down = ->
