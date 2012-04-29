@@ -1,5 +1,9 @@
 
 tag = (id) -> document.getElementById id
+ll = (v...) ->
+  for item in v
+    time = new Date().getTime()
+    console.log time, item
 
 keymap = ''
 available_chars = 'abcdefghijjklmnopqrstuvwxyz'
@@ -15,31 +19,30 @@ draw = (arr) ->
   for item in arr
     if Array.isArray item
       str+= draw item
-      console.log arr, ' sent to draw'
     else if item is curse
       str+= render_curse
     else
-      item = item.replace curse, render_curse
-      str+= "<span>#{item}</span>"
+      item = item.replace(curse, render_curse)
+        .replace(/\s/g, '&nbsp;')
+      str+= "<code>#{item}</code>"
   "<div>#{str}</div>"
 
 window.onload = ->
   box = tag 'box'
-  nothing = tag 'nothing'
-  nothing.focus()
+  window.focus()
 
   do refresh = ->
     box.innerHTML = draw store
     console.log 'Refreshing :::: ', store
 
-  nothing.onkeypress = (e) ->
+  document.onkeypress = (e) ->
     char = String.fromCharCode e.keyCode
     if char in add_inputs
       console.log "(#{char}) in inputs"
       input char
       do refresh
     return false
-  nothing.onkeydown = (e) ->
+  document.onkeydown = (e) ->
     code = e.keyCode
     if control[''+code]?
       do control[''+code]
@@ -49,11 +52,11 @@ window.onload = ->
 store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
 
 input = (char) ->
-  reverse = (arr) ->
+  recurse = (arr) ->
     copy = []
     for item in arr
       if Array.isArray item
-        copy.push (reverse item)
+        copy.push (recurse item)
       else if item is curse then copy.push "#{char}#{curse}"
       else
         coll = ''
@@ -62,13 +65,13 @@ input = (char) ->
           coll+= c
         copy.push coll
     copy
-  store = reverse store
+  store = recurse store
 
 cancel = ->
   console.log 'called to cancel'
   if store[0] is curse
     return 'nothing to do'
-  reverse = (arr) ->
+  recurse = (arr) ->
     if curse in arr
       return curse if arr[0] is curse
       curse_place = arr.indexOf curse
@@ -77,7 +80,7 @@ cancel = ->
     copy = []
     for item in arr
       if Array.isArray item
-        copy.push (reverse item)
+        copy.push (recurse item)
       else
         return curse if item[0] is curse
         coll = ''
@@ -86,12 +89,24 @@ cancel = ->
           coll+= c
         copy.push coll
     copy
-  store = reverse store
+  store = recurse store
+
+space = ->
+  recurse = (arr) ->
+    copy = []
+    for item in arr
+      if Array.isArray item then copy.push (recurse item)
+      else 
+        curse_index = item.indexOf curse
+        if curse_index is -1 then copy.push item
+        else 
+          copy.push (item[...curse_index].concat item[curse_index+1...])
+          copy.push curse
+    copy
+  store = recurse store
 
 enter = ->
-  ''
-space = ->
-  ''
+  ll 'enter was called'
 blank = ->
   ''
 esc = ->
@@ -105,7 +120,7 @@ up = ->
 down = ->
   ''
 tab = ->
-  ''
+  input ' '
 
 control =
   '8':  cancel
