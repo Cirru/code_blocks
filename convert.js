@@ -27,8 +27,9 @@ draw = function(arr) {
   str = '';
   for (_i = 0, _len = arr.length; _i < _len; _i++) {
     item = arr[_i];
-    if (typeof item === 'object') {
+    if (Array.isArray(item)) {
       str += draw(item);
+      console.log(arr, ' sent to draw');
     } else if (item === curse) {
       str += render_curse;
     } else {
@@ -39,25 +40,14 @@ draw = function(arr) {
   return "<div>" + str + "</div>";
 };
 
-control = {
-  '8': cancel,
-  '13': enter,
-  '32': space,
-  '9': tab,
-  '27': esc,
-  '37': left,
-  '39': right,
-  '38': up,
-  '40': down
-};
-
 window.onload = function() {
   var box, nothing, refresh;
   box = tag('box');
   nothing = tag('nothing');
   nothing.focus();
   (refresh = function() {
-    return box.innerHTML = draw(store);
+    box.innerHTML = draw(store);
+    return console.log('Refreshing :::: ', store);
   })();
   nothing.onkeypress = function(e) {
     var char;
@@ -72,13 +62,15 @@ window.onload = function() {
   return nothing.onkeydown = function(e) {
     var code;
     code = e.keyCode;
-    if (control[String(code)] != null) {
-      return control(String(code))();
+    if (control['' + code] != null) {
+      control['' + code]();
+      refresh();
+      return false;
     }
   };
 };
 
-store = ['45345', '345345', '\t', ['444\t']];
+store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]];
 
 input = function(char) {
   var reverse;
@@ -87,7 +79,7 @@ input = function(char) {
     copy = [];
     for (_i = 0, _len = arr.length; _i < _len; _i++) {
       item = arr[_i];
-      if (typeof item === 'object') {
+      if (Array.isArray(item)) {
         copy.push(reverse(item));
       } else if (item === curse) {
         copy.push("" + char + curse);
@@ -109,7 +101,44 @@ input = function(char) {
 };
 
 cancel = function() {
-  return '';
+  var reverse;
+  console.log('called to cancel');
+  if (store[0] === curse) {
+    return 'nothing to do';
+  }
+  reverse = function(arr) {
+    var c, coll, copy, curse_place, item, _i, _j, _len, _len1;
+    if (__indexOf.call(arr, curse) >= 0) {
+      if (arr[0] === curse) {
+        return curse;
+      }
+      curse_place = arr.indexOf(curse);
+      arr = arr.slice(0, curse_place - 1).concat(arr.slice(curse_place));
+      return arr;
+    }
+    copy = [];
+    for (_i = 0, _len = arr.length; _i < _len; _i++) {
+      item = arr[_i];
+      if (Array.isArray(item)) {
+        copy.push(reverse(item));
+      } else {
+        if (item[0] === curse) {
+          return curse;
+        }
+        coll = '';
+        for (_j = 0, _len1 = item.length; _j < _len1; _j++) {
+          c = item[_j];
+          if (c === curse) {
+            coll = coll.slice(0, -1);
+          }
+          coll += c;
+        }
+        copy.push(coll);
+      }
+    }
+    return copy;
+  };
+  return store = reverse(store);
 };
 
 enter = function() {
@@ -146,4 +175,16 @@ down = function() {
 
 tab = function() {
   return '';
+};
+
+control = {
+  '8': cancel,
+  '13': enter,
+  '32': space,
+  '9': tab,
+  '27': esc,
+  '37': left,
+  '39': right,
+  '38': up,
+  '40': down
 };
