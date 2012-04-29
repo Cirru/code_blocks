@@ -163,7 +163,6 @@ home = ->
             copy.push "#{curse}#{item.replace(curse, '')}"
           else copy.push item
     copy
-  ll store
   store = recurse store
 
 end = ->
@@ -180,7 +179,17 @@ end = ->
   do home
   store = reverse store
 
-remove  = -> ''
+remove  = ->
+  if curse in store
+    store = [curse]
+    return 'done'
+  recurse = (arr) ->
+    arr.map (x) ->
+      if Array.isArray x
+        return if curse in x then curse else (recurse x)
+      else
+        if x.match(new RegExp curse)? then curse else x
+  store = recurse store
 
 left = ->
   ''
@@ -208,3 +217,4 @@ control =
   '40': down
   '36': home
   '35': end
+  '46': remove

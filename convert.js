@@ -280,7 +280,6 @@ home = function() {
     }
     return copy;
   };
-  ll(store);
   return store = recurse(store);
 };
 
@@ -312,7 +311,29 @@ end = function() {
 };
 
 remove = function() {
-  return '';
+  var recurse;
+  if (__indexOf.call(store, curse) >= 0) {
+    store = [curse];
+    return 'done';
+  }
+  recurse = function(arr) {
+    return arr.map(function(x) {
+      if (Array.isArray(x)) {
+        if (__indexOf.call(x, curse) >= 0) {
+          return curse;
+        } else {
+          return recurse(x);
+        }
+      } else {
+        if (x.match(new RegExp(curse)) != null) {
+          return curse;
+        } else {
+          return x;
+        }
+      }
+    });
+  };
+  return store = recurse(store);
 };
 
 left = function() {
@@ -349,5 +370,6 @@ control = {
   '38': up,
   '40': down,
   '36': home,
-  '35': end
+  '35': end,
+  '46': remove
 };
