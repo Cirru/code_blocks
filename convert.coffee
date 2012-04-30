@@ -9,7 +9,7 @@ keymap = ''
 available_chars = 'abcdefghijjklmnopqrstuvwxyz'
 available_chars+= 'ABCDEFGHIJJKLMNOPQRSTUVWXYZ'
 available_chars+= '1234567890!@#$%^&*()'
-available_chars+= '~`_-+-[]{}\\|:;"\',.<>/?'
+available_chars+= '~`_-+=-[]{}\\|:;"\',.<>/?'
 add_inputs = available_chars.split ''
 
 cursor = '\t'
@@ -37,18 +37,25 @@ window.onload = ->
 
   document.onkeypress = (e) ->
     char = String.fromCharCode e.keyCode
-    if char in add_inputs
-      console.log "(#{char}) in inputs"
-      input char
-      do refresh
-    return false
+    unless e.ctrlKey or e.alyKey
+      if char in add_inputs
+        console.log "(#{char}) in inputs"
+        input char
+        do refresh
+      return false
   document.onkeydown = (e) ->
     code = e.keyCode
     console.log 'keyCode .... ', code
-    if control[''+code]?
-      do control[''+code]
-      do refresh
-      return false
+    unless e.ctrlKey or e.altKey
+      if control[''+code]?
+        do control[''+code]
+        do refresh
+        return false
+    if e.ctrlKey and (not e.altKey)
+      if control['c_'+code]?
+        do control['c_'+code]
+        do refresh
+        return false
 
 store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
 
@@ -271,6 +278,28 @@ up = ->
   do down
   store = reverse store
 
+left_step = ->
+  recursion = (arr) ->
+    if arr[0] is cursor then return arr
+    copy = []
+    for item in arr
+      if Array.isArray item then copy.push (recursion item)
+      else if item is cursor
+        last_item = copy.pop()
+        copy.push cursor, last_item
+      else
+        find_cursor = item.match (new RegExp cursor)
+        unless find_cursor? then copy.push item
+        else
+          copy.push cursor, item.replace(cursor, '')
+    copy
+  store = recursion store
+
+right_step = ->
+  store = reverse store
+  do left_step
+  store = reverse store
+
 ### beyond demo on this page
 save = -> ''
 import = -> ''
@@ -290,3 +319,5 @@ control =
   '36': home
   '35': end
   '46': remove
+  'c_37': left_step
+  'c_39': right_step
