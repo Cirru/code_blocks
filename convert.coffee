@@ -37,15 +37,16 @@ window.onload = ->
 
   document.onkeypress = (e) ->
     char = String.fromCharCode e.keyCode
-    unless e.ctrlKey or e.alyKey
+    # console.log 'target!', char, e.ctrlKey
+    unless e.ctrlKey or e.altKey
       if char in add_inputs
-        console.log "(#{char}) in inputs"
+        # console.log "(#{char}) in inputs"
         input char
         do refresh
       return false
   document.onkeydown = (e) ->
     code = e.keyCode
-    console.log 'keyCode .... ', code
+    console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
       if control[''+code]?
         do control[''+code]
@@ -76,7 +77,7 @@ input = (char) ->
   store = recursion store
 
 cancel = ->
-  console.log 'called to cancel'
+  # console.log 'called to cancel'
   if store[0] is cursor
     return 'nothing to do'
   recursion = (arr) ->
@@ -213,23 +214,23 @@ left = ->
           copy.push item[1..] if item.length > 1
         else copy.push (recursion item)
       else if item is cursor
-        console.log 'copy: ', copy
+        # console.log 'copy: ', copy
         last_item = copy.pop()
         if Array.isArray last_item
           last_item.push cursor
           copy.push last_item
         else copy.push "#{last_item}#{cursor}"
       else
-        console.log 'all strings', item
+        # console.log 'all strings', item
         if item[0] is cursor
           copy.push cursor
           copy.push item[1..] if item.length > 1
         else
           find_cursor = item.match (new RegExp cursor)
-          console.log 'find? ', find_cursor
+          # console.log 'find? ', find_cursor
           unless find_cursor? then copy.push item
           else 
-            console.log 'item to swap: ', item
+            # console.log 'item to swap: ', item
             swapit = new RegExp "(.)#{cursor}"
             copy.push item.replace(swapit, "#{cursor}$1")
     copy
@@ -247,7 +248,7 @@ down = ->
     if item in [cursor, [cursor]] then return 'no need'
     if item.match(new RegExp cursor)? then return 'yeah'
   recursion = (arr) ->
-    console.log 'evenry time begin:: ', arr
+    # console.log 'evenry time begin:: ', arr
     copy = []
     has_cursor = no
     for item in arr
@@ -258,7 +259,7 @@ down = ->
           has_cursor = yes
         else copy.push item
       else
-        console.log 'else... ', item
+        # console.log 'else... ', item
         if has_cursor
           item.unshift cursor
           copy.push item
@@ -271,7 +272,7 @@ down = ->
       value: copy
       has_cursor: has_cursor
   store = (recursion store).value
-  console.log 'result: ', store
+  # console.log 'result: ', store
 
 up = ->
   store = reverse store
@@ -300,6 +301,53 @@ right_step = ->
   do left_step
   store = reverse store
 
+snippet = null
+
+ctrl_copy = ->
+  recursion = (arr) ->
+    for item in arr
+      if Array.isArray item
+        if cursor in item
+          snippet = item.filter (x) -> x isnt cursor
+          return 'got'
+        recursion item
+      else
+        if item.indexOf(cursor) >= 0
+          snippet = item.replace cursor, ''
+          return 'got'
+  recursion store
+  # console.log snippet
+
+ctrl_cut = ->
+  if cursor in store then return 'wont do'
+  recursion = (arr) ->
+    copy = []
+    for item in arr
+      if Array.isArray item
+        if cursor in item
+          copy.push cursor
+          snippet = item.filter (x) -> x isnt cursor
+        else copy.push (recursion item)
+      else
+        if item.indexOf(cursor) >= 0
+          copy.push cursor
+          snippet = item.replace(cursor, '')
+        else copy.push item
+    copy
+  store = recursion store
+  # console.log snippet
+
+ctrl_paste = ->
+  recursion = (arr) ->
+    copy = []
+    for item in arr
+      if Array.isArray item then copy.push (recursion item)
+      else if item is cursor then copy.push snippet, cursor
+      else if item.indexOf(cursor) < 0 then copy.push item
+      else copy.push snippet, item
+    copy
+  if snippet? then store = recursion store
+
 ### beyond demo on this page
 save = -> ''
 import = -> ''
@@ -321,3 +369,6 @@ control =
   '46': remove
   'c_37': left_step
   'c_39': right_step
+  'c_67': ctrl_copy
+  'c_88': ctrl_cut
+  'c_80': ctrl_paste
