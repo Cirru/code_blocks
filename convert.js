@@ -45,7 +45,7 @@ draw = function(arr) {
     } else if (item === cursor) {
       str += render_cursor;
     } else {
-      item = item.replace(cursor, render_cursor).replace(/\s/g, '&nbsp;');
+      item = item.replace(cursor, render_cursor).replace(/\s/g, '<span class="appear">&nbsp;</span>');
       str += "<code>" + item + "</code>";
     }
   }
@@ -74,7 +74,6 @@ window.onload = function() {
   return document.onkeydown = function(e) {
     var code;
     code = e.keyCode;
-    console.log('keyCode .... ', code, e.ctrlKey);
     if (!(e.ctrlKey || e.altKey)) {
       if (control['' + code] != null) {
         control['' + code]();
@@ -131,7 +130,7 @@ cancel = function() {
     var c, coll, copy, cursor_place, item, _i, _j, _len, _len1;
     if (__indexOf.call(arr, cursor) >= 0) {
       if (arr[0] === cursor) {
-        return cursor;
+        return arr;
       }
       cursor_place = arr.indexOf(cursor);
       arr = arr.slice(0, cursor_place - 1).concat(arr.slice(cursor_place));

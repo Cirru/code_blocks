@@ -23,7 +23,7 @@ draw = (arr) ->
       str+= render_cursor
     else
       item = item.replace(cursor, render_cursor)
-        .replace(/\s/g, '&nbsp;')
+        .replace(/\s/g, '<span class="appear">&nbsp;</span>')
       str+= "<code>#{item}</code>"
   "<div>#{str}</div>"
 
@@ -46,7 +46,7 @@ window.onload = ->
       return false
   document.onkeydown = (e) ->
     code = e.keyCode
-    console.log 'keyCode .... ', code, e.ctrlKey
+    # console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
       if control[''+code]?
         do control[''+code]
@@ -82,7 +82,7 @@ cancel = ->
     return 'nothing to do'
   recursion = (arr) ->
     if cursor in arr
-      return cursor if arr[0] is cursor
+      return arr if arr[0] is cursor
       cursor_place = arr.indexOf cursor
       arr = arr[...cursor_place-1].concat arr[cursor_place..]
       return arr
