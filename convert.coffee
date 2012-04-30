@@ -164,7 +164,7 @@ home = ->
     for item in arr
       if item[0] is cursor
         copy.push cursor
-        copy.push item[1..] is item.length > 1
+        copy.push item[1..] if item.length > 1
       else
         if Array.isArray item then copy.push (recursion item)
         else 

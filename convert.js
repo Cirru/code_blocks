@@ -268,7 +268,7 @@ home = function() {
     return 'top level, nothing to do';
   }
   recursion = function(arr) {
-    var copy, find_cursor, item, _i, _len, _ref;
+    var copy, find_cursor, item, _i, _len;
     if (__indexOf.call(arr, cursor) >= 0 && (arr[0] !== cursor)) {
       return [cursor].concat(arr.filter(function(x) {
         return x !== cursor;
@@ -279,7 +279,9 @@ home = function() {
       item = arr[_i];
       if (item[0] === cursor) {
         copy.push(cursor);
-        copy.push((item.slice(1) === (_ref = item.length) && _ref > 1));
+        if (item.length > 1) {
+          copy.push(item.slice(1));
+        }
       } else {
         if (Array.isArray(item)) {
           copy.push(recursion(item));
