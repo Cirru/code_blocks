@@ -41,6 +41,7 @@ window.onload = ->
     console.log 'Refreshing :::: ', store
 
   document.onkeypress = (e) ->
+    unless editor_mode then return 'locked'
     char = String.fromCharCode e.keyCode
     # console.log 'target!', char, e.ctrlKey
     unless e.ctrlKey or e.altKey
@@ -50,16 +51,15 @@ window.onload = ->
         do refresh
       return false
   document.onkeydown = (e) ->
-    if editor_mode is off
-      editor_mode = on
-      do refresh
-      return false
     code = e.keyCode
+    unless editor_mode
+      unless code is 27 then return 'locked'
     console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
       if control[''+code]?
-        do control[''+code]
-        do refresh
+        send_back = do control[''+code]
+        unless send_back is 'no need to refresh'
+          do refresh
         return false
     if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
@@ -409,8 +409,6 @@ choose_version = (new_version_cursor) ->
 current_version = document.createElement 'header'
 current_version.innerHTML = 'current'
 
-esc = -> ''
-
 view_version = ->
   recursion = (obj) ->
     if obj is cursor then return current_version
@@ -430,7 +428,15 @@ view_version = ->
     footer
   tag('box').innerHTML = ''
   tag('box').appendChild (recursion version_map)
-  editor_mode = off
+  'no need to refresh'
+
+esc = ->
+  if editor_mode
+    do view_version
+    editor_mode = off
+  else
+    (tag 'box').innerHTML = draw store
+    editor_mode = on
   'no need to refresh'
 
 control =

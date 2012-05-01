@@ -72,6 +72,9 @@ window.onload = function() {
   })();
   document.onkeypress = function(e) {
     var char;
+    if (!editor_mode) {
+      return 'locked';
+    }
     char = String.fromCharCode(e.keyCode);
     if (!(e.ctrlKey || e.altKey)) {
       if (__indexOf.call(add_inputs, char) >= 0) {
@@ -83,17 +86,19 @@ window.onload = function() {
   };
   return document.onkeydown = function(e) {
     var code, send_back;
-    if (editor_mode === false) {
-      editor_mode = true;
-      refresh();
-      return false;
-    }
     code = e.keyCode;
+    if (!editor_mode) {
+      if (code !== 27) {
+        return 'locked';
+      }
+    }
     console.log('keyCode .... ', code, e.ctrlKey);
     if (!(e.ctrlKey || e.altKey)) {
       if (control['' + code] != null) {
-        control['' + code]();
-        refresh();
+        send_back = control['' + code]();
+        if (send_back !== 'no need to refresh') {
+          refresh();
+        }
         return false;
       }
     }
@@ -663,10 +668,6 @@ current_version = document.createElement('header');
 
 current_version.innerHTML = 'current';
 
-esc = function() {
-  return '';
-};
-
 view_version = function() {
   var recursion;
   recursion = function(obj) {
@@ -695,7 +696,17 @@ view_version = function() {
   };
   tag('box').innerHTML = '';
   tag('box').appendChild(recursion(version_map));
-  editor_mode = false;
+  return 'no need to refresh';
+};
+
+esc = function() {
+  if (editor_mode) {
+    view_version();
+    editor_mode = false;
+  } else {
+    (tag('box')).innerHTML = draw(store);
+    editor_mode = true;
+  }
   return 'no need to refresh';
 };
 
