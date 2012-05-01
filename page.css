@@ -28,3 +28,16 @@ nav {
 .appear {
   background: -webkit-gradient(linear, 0 0, 100% 0, from(#f7d9ba), color-stop(40%, #f7d9ba), color-stop(50%, #fbeddf), color-stop(60%, #f7d9ba), to(#f7d9ba));
 }
+.inline_block {
+  display: inline-block;
+  margin: 0px 4px;
+  padding: 4px;
+  border: 1px solid #a3daf5;
+  -webkit-border-radius: 4px;
+}
+footer {
+  border: solid 1px #d6d65c;
+  margin: 8px 0px 0px 20px;
+  padding: 4px 2px 2px 4px;
+  display: inline-block;
+}

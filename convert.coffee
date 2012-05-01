@@ -25,7 +25,10 @@ draw = (arr) ->
       item = item.replace(cursor, render_cursor)
         .replace(/\s/g, '<span class="appear">&nbsp;</span>')
       str+= "<code>#{item}</code>"
-  "<div>#{str}</div>"
+  inline_block = ''
+  if arr.toString().length < 15
+    inline_block = ' class="inline_block"'
+  "<div#{inline_block}>#{str}</div>"
 
 window.onload = ->
   box = tag 'box'
@@ -46,7 +49,7 @@ window.onload = ->
       return false
   document.onkeydown = (e) ->
     code = e.keyCode
-    # console.log 'keyCode .... ', code, e.ctrlKey
+    console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
       if control[''+code]?
         do control[''+code]
@@ -54,8 +57,9 @@ window.onload = ->
         return false
     if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
-        do control['c_'+code]
-        do refresh
+        send_back = do control['c_'+code]
+        unless send_back is 'no need to refresh'
+          do refresh
         return false
 
 store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
@@ -348,11 +352,54 @@ ctrl_paste = ->
     copy
   if snippet? then store = recursion store
 
-### beyond demo on this page
-save = -> ''
-import = -> ''
-export = -> ''
-###
+version_map =
+  store: ['console', 'log', 'hello world']
+  stemp: 'no time'
+  child: [cursor]
+  commit: 'root'
+
+version_cursor = version_map.child
+
+pair_num = (num) ->
+  if num < 10 then (String num) else '0'+(String num)
+
+save_version = ->
+  date_obj = new Date()
+  year = (String date_obj.getFullYear())[2..3]
+  month = pair_num (date_obj.getMonth() + 1)
+  date = pair_num date_obj.getDate()
+  hour = pair_num date_obj.getHours()
+  minute = pair_num date_obj.getMinutes()
+  stemp = "#{year}/#{month}/#{date} #{hour}:#{minute}"
+  version_cursor.pop()
+  version_cursor.push store:store,stemp:stemp,child:[],commit:prompt()
+  last_item = version_cursor
+  version_cursor = version_cursor[last_item.length-1].child
+  version_cursor.push cursor
+  console.log 'version :: ', version_map
+  'no need to refresh'
+
+choose_version = (new_version_cursor) ->
+  do save_version
+  version_cursor.pop()
+  version_cursor = new_version_cursor
+  version_cursor.push cursor
+
+current_version = 'current_version'
+
+view_version = ->
+  recursion = (obj) ->
+    if obj is cursor then return current_version
+    console.log 'obj:: ', obj
+    if Array.isArray obj.child
+      str = '<footer>'
+      str+= "commit: #{obj.commit}<br>"
+      str+= "time: #{obj.stemp}<br>"
+      str+= obj.child.map(recursion).join ''
+      return str+'<footer>'
+    ''
+  tag('box').innerHTML = recursion version_map
+  'no need to refresh'
 
 control =
   '8':  cancel
@@ -372,3 +419,5 @@ control =
   'c_67': ctrl_copy
   'c_88': ctrl_cut
   'c_80': ctrl_paste
+  'c_83': save_version
+  'c_86': view_version
