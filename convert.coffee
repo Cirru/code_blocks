@@ -30,6 +30,7 @@ draw = (arr) ->
     inline_block = ' class="inline_block"'
   "<div#{inline_block}>#{str}</div>"
 
+editor_mode = on
 window.onload = ->
   box = tag 'box'
   window.focus()
@@ -48,6 +49,10 @@ window.onload = ->
         do refresh
       return false
   document.onkeydown = (e) ->
+    if editor_mode is off
+      editor_mode = on
+      do refresh
+      return false
     code = e.keyCode
     console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
@@ -391,14 +396,13 @@ view_version = ->
   recursion = (obj) ->
     if obj is cursor then return current_version
     console.log 'obj:: ', obj
-    if Array.isArray obj.child
-      str = '<footer>'
-      str+= "commit: #{obj.commit}<br>"
+    if obj.commit?
+      str = "commit: #{obj.commit}<br>"
       str+= "time: #{obj.stemp}<br>"
       str+= obj.child.map(recursion).join ''
-      return str+'<footer>'
-    ''
+    if str? then "<footer>#{str}</footer>" else ''
   tag('box').innerHTML = recursion version_map
+  editor_mode = off
   'no need to refresh'
 
 control =
