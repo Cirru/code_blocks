@@ -42,3 +42,12 @@ footer {
   display: inline-block;
   vertical-align: top;
 }
+header {
+  width: 60px;
+  height: 16px;
+  color: #fff;
+  font-size: 13px;
+  background: #fad1d1;
+  display: inline-block;
+  margin: 8px 0px 0px 4px;
+}

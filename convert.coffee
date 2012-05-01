@@ -359,12 +359,12 @@ ctrl_paste = ->
   if snippet? then store = recursion store
 
 version_map =
-  store: ['console', 'log', 'hello world']
+  store: store
   stemp: 'no time'
   child: [cursor]
   commit: 'root'
 
-version_cursor = version_map.child
+version_cursor = version_map
 
 pair_num = (num) ->
   if num < 10 then (String num) else '0'+(String num)
@@ -377,23 +377,30 @@ save_version = ->
   hour = pair_num date_obj.getHours()
   minute = pair_num date_obj.getMinutes()
   stemp = "#{year}/#{month}/#{date} #{hour}:#{minute}"
-  version_cursor.pop()
-  version_cursor.push store:store,stemp:stemp,child:[],commit:prompt()
-  last_item = version_cursor
-  version_cursor = version_cursor[last_item.length-1].child
-  version_cursor.push cursor
+  version_cursor.child.pop()
+  version_cursor.child.push (
+    store:store,
+    stemp:stemp,
+    child:[],
+    commit:prompt('need')
+  )
+  last_item = version_cursor.child
+  console.log 'last_item: ', last_item
+  version_cursor = version_cursor.child[last_item.length-1]
+  version_cursor.child.push cursor
   console.log 'version :: ', version_map
   do view_version
   'no need to refresh'
 
 choose_version = (new_version_cursor) ->
-  do save_version
-  version_cursor.pop()
+  version_cursor.child.pop()
   version_cursor = new_version_cursor
-  version_cursor.push cursor
+  store = version_cursor.store
+  version_cursor.child.push cursor
   do view_version
 
 current_version = document.createElement 'header'
+current_version.innerHTML = 'current'
 
 view_version = ->
   recursion = (obj) ->
@@ -401,7 +408,7 @@ view_version = ->
     if obj.commit?
       footer = new_footer()
       footer.onclick = (e) ->
-        choose_version obj.child
+        choose_version obj
         e.stopPropagation()
         return false
       footer.innerHTML+= "#{obj.commit}<br>"

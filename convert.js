@@ -601,13 +601,13 @@ ctrl_paste = function() {
 };
 
 version_map = {
-  store: ['console', 'log', 'hello world'],
+  store: store,
   stemp: 'no time',
   child: [cursor],
   commit: 'root'
 };
 
-version_cursor = version_map.child;
+version_cursor = version_map;
 
 pair_num = function(num) {
   if (num < 10) {
@@ -626,30 +626,33 @@ save_version = function() {
   hour = pair_num(date_obj.getHours());
   minute = pair_num(date_obj.getMinutes());
   stemp = "" + year + "/" + month + "/" + date + " " + hour + ":" + minute;
-  version_cursor.pop();
-  version_cursor.push({
+  version_cursor.child.pop();
+  version_cursor.child.push({
     store: store,
     stemp: stemp,
     child: [],
-    commit: prompt()
+    commit: prompt('need')
   });
-  last_item = version_cursor;
-  version_cursor = version_cursor[last_item.length - 1].child;
-  version_cursor.push(cursor);
+  last_item = version_cursor.child;
+  console.log('last_item: ', last_item);
+  version_cursor = version_cursor.child[last_item.length - 1];
+  version_cursor.child.push(cursor);
   console.log('version :: ', version_map);
   view_version();
   return 'no need to refresh';
 };
 
 choose_version = function(new_version_cursor) {
-  save_version();
-  version_cursor.pop();
+  version_cursor.child.pop();
   version_cursor = new_version_cursor;
-  version_cursor.push(cursor);
+  store = version_cursor.store;
+  version_cursor.child.push(cursor);
   return view_version();
 };
 
 current_version = document.createElement('header');
+
+current_version.innerHTML = 'current';
 
 view_version = function() {
   var recursion;
@@ -661,7 +664,7 @@ view_version = function() {
     if (obj.commit != null) {
       footer = new_footer();
       footer.onclick = function(e) {
-        choose_version(obj.child);
+        choose_version(obj);
         e.stopPropagation();
         return false;
       };
