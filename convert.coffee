@@ -32,6 +32,10 @@ draw = (arr) ->
   "<div#{inline_block}>#{str}</div>"
 
 editor_mode = on
+store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
+history = [store]
+current = 0
+
 window.onload = ->
   box = tag 'box'
   window.focus()
@@ -49,6 +53,10 @@ window.onload = ->
         # console.log "(#{char}) in inputs"
         input char
         do refresh
+        history = history[..current]
+        history.push store
+        current+= 1
+        console.log history
       return false
   document.onkeydown = (e) ->
     code = e.keyCode
@@ -59,16 +67,21 @@ window.onload = ->
       if control[''+code]?
         send_back = do control[''+code]
         unless send_back is 'no need to refresh'
+          history = history[..current]
+          history.push store
+          current+= 1
           do refresh
         return false
     if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
         send_back = do control['c_'+code]
         unless send_back is 'no need to refresh'
+          unless code in [89, 90]
+            history = history[..current]
+            history.push store
+            current+= 1
           do refresh
         return false
-
-store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
 
 input = (char) ->
   recursion = (arr) ->
@@ -374,7 +387,7 @@ version_map =
 version_cursor = version_map
 
 pair_num = (num) ->
-  if num < 10 then (String num) else '0'+(String num)
+  if num < 10 then '0'+(String num) else (String num)
 
 save_version = ->
   date_obj = new Date()
@@ -383,7 +396,7 @@ save_version = ->
   date = pair_num date_obj.getDate()
   hour = pair_num date_obj.getHours()
   minute = pair_num date_obj.getMinutes()
-  stemp = "#{year}/#{month}/#{date} #{hour}:#{minute}"
+  stemp = "#{year}#{month}#{date} #{hour}:#{minute}"
   version_cursor.child.pop()
   version_cursor.child.push (
     store:store,
@@ -395,8 +408,8 @@ save_version = ->
   console.log 'last_item: ', last_item
   version_cursor = version_cursor.child[last_item.length-1]
   version_cursor.child.push cursor
-  console.log 'version :: ', version_map
-  do view_version
+  history = [store]
+  current = 0
   'no need to refresh'
 
 choose_version = (new_version_cursor) ->
@@ -404,6 +417,8 @@ choose_version = (new_version_cursor) ->
   version_cursor = new_version_cursor
   store = version_cursor.store
   version_cursor.child.push cursor
+  history = [store]
+  current = 0
   do view_version
 
 current_version = document.createElement 'header'
@@ -439,6 +454,19 @@ esc = ->
     editor_mode = on
   'no need to refresh'
 
+go_ahead = ->
+  if history[current+1]?
+    store = history[current+1]
+    current+= 1
+    (tag 'box').innerHTML = draw store
+
+go_back = ->
+  console.log 'current: ', current
+  if history[current-1]?
+    store = history[current-1]
+    current-= 1
+    (tag 'box').innerHTML = draw store
+
 control =
   '8':  cancel
   '13': enter
@@ -461,3 +489,5 @@ control =
   'c_80': ctrl_paste
   'c_83': save_version
   'c_86': view_version
+  'c_90': go_back
+  'c_89': go_ahead

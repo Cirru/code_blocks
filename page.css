@@ -37,17 +37,20 @@ nav {
 }
 footer {
   border: solid 1px #d6d65c;
-  margin: 8px 0px 0px 20px;
-  padding: 4px 2px 2px 4px;
+  margin: 1px;
+  padding: 1px;
   display: inline-block;
   vertical-align: top;
+  -webkit-border-radius: 8px;
 }
 header {
-  width: 60px;
+  width: 70px;
   height: 16px;
+  margin: 1px;
+  padding: 1px;
   color: #fff;
   font-size: 13px;
   background: #fad1d1;
   display: inline-block;
-  margin: 8px 0px 0px 4px;
+  -webkit-border-radius: 3px;
 }
