@@ -144,26 +144,33 @@ enter = ->
 blank = ->
   input ' '
 
-esc = ->
-  if cursor in store
-    return 'top level.. dont do enything'
+pgup = ->
+  if store[0] is cursor then return 'nothing'
   recursion = (arr) ->
     copy = []
     for item in arr
       if Array.isArray item
-        if cursor in item
-          last_item = item.filter (x) -> x isnt cursor
-          if last_item.length > 0 then copy.push last_item
+        if item[0] is cursor
           copy.push cursor
+          copy.push item[1..] if item.length > 1
         else copy.push (recursion item)
+      else if item is cursor
+        last_item = copy.pop()
+        if Array.isArray last_item
+          last_item.push cursor
+          copy.push last_item
+        else copy.push cursor, last_item
       else
-        cursor_place = item.indexOf cursor
-        if cursor_place is -1 then copy.push item
+        if item.indexOf(cursor) < 0 then copy.push item
         else 
-          copy.push item.replace(cursor, '')
-          copy.push cursor
+          copy.push cursor, item.replace(cursor, '')
     copy
   store = recursion store
+
+pgdown = ->
+  store = reverse store
+  do pgup
+  store = reverse store
 
 home = ->
   if store[0]? and store[0] is cursor
@@ -382,7 +389,7 @@ save_version = ->
     store:store,
     stemp:stemp,
     child:[],
-    commit:prompt('need')
+    commit:prompt('commit')
   )
   last_item = version_cursor.child
   console.log 'last_item: ', last_item
@@ -401,6 +408,8 @@ choose_version = (new_version_cursor) ->
 
 current_version = document.createElement 'header'
 current_version.innerHTML = 'current'
+
+esc = -> ''
 
 view_version = ->
   recursion = (obj) ->
@@ -437,6 +446,8 @@ control =
   '36': home
   '35': end
   '46': remove
+  '33': pgup
+  '34': pgdown
   'c_37': left_step
   'c_39': right_step
   'c_67': ctrl_copy
