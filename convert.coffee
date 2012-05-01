@@ -1,5 +1,6 @@
 
 tag = (id) -> document.getElementById id
+new_footer = -> document.createElement 'footer'
 ll = (v...) ->
   for item in v
     time = new Date().getTime()
@@ -382,6 +383,7 @@ save_version = ->
   version_cursor = version_cursor[last_item.length-1].child
   version_cursor.push cursor
   console.log 'version :: ', version_map
+  do view_version
   'no need to refresh'
 
 choose_version = (new_version_cursor) ->
@@ -389,19 +391,29 @@ choose_version = (new_version_cursor) ->
   version_cursor.pop()
   version_cursor = new_version_cursor
   version_cursor.push cursor
+  do view_version
 
-current_version = 'current_version'
+current_version = document.createElement 'header'
 
 view_version = ->
   recursion = (obj) ->
     if obj is cursor then return current_version
-    console.log 'obj:: ', obj
     if obj.commit?
-      str = "commit: #{obj.commit}<br>"
-      str+= "time: #{obj.stemp}<br>"
-      str+= obj.child.map(recursion).join ''
-    if str? then "<footer>#{str}</footer>" else ''
-  tag('box').innerHTML = recursion version_map
+      footer = new_footer()
+      footer.onclick = (e) ->
+        choose_version obj.child
+        e.stopPropagation()
+        return false
+      footer.innerHTML+= "#{obj.commit}<br>"
+      footer.innerHTML+= "#{obj.stemp}<br>"
+      obj.child.forEach (item) ->
+        result = recursion item
+        console.log 'result: ', result
+        footer.appendChild result
+      footer.childNodes
+    footer
+  tag('box').innerHTML = ''
+  tag('box').appendChild (recursion version_map)
   editor_mode = off
   'no need to refresh'
 
