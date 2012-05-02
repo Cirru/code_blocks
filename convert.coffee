@@ -81,119 +81,119 @@ window.onload = ->
             do history_generator
         false
 
+input_recursion = (arr, char) ->
+  copy = []
+  for item in arr
+    if Array.isArray item
+      copy.push (input_recursion item, char)
+    else if item is cursor then copy.push "#{char}#{cursor}"
+    else
+      coll = ''
+      for c in item
+        coll+= char if c is cursor
+        coll+= c
+      copy.push coll
+  copy
 input = (char) ->
-  recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item
-        copy.push (recursion item)
-      else if item is cursor then copy.push "#{char}#{cursor}"
-      else
-        coll = ''
-        for c in item
-          coll+= char if c is cursor
-          coll+= c
-        copy.push coll
-    copy
-  store = recursion store
+  store = input_recursion store, char
 
+cancel_recursion = (arr) ->
+  point = arr.indexOf cursor
+  unless point is -1
+    return arr if point is 0
+    arr = arr[...point-1].concat arr[point..]
+    return arr
+  copy = []
+  for item in arr
+    if Array.isArray item then copy.push (cancel_recursion item)
+    else
+      point = item.indexOf cursor
+      if point is -1 then copy.push item
+      else if point is 0 then copy.push cursor
+      else copy.push "#{item[...point-1]}#{item[point..]}"
+  copy
 cancel = ->
   # console.log 'called to cancel'
   if store[0] is cursor then return 'skip'
-  recursion = (arr) ->
-    point = arr.indexOf cursor
-    unless point is -1
-      return arr if point is 0
-      arr = arr[...point-1].concat arr[point..]
-      return arr
-    copy = []
-    for item in arr
-      if Array.isArray item then copy.push (recursion item)
-      else
-        point = item.indexOf cursor
-        if point is -1 then copy.push item
-        else if point is 0 then copy.push cursor
-        else copy.push "#{item[...point-1]}#{item[point..]}"
-    copy
-  store = recursion store
+  store = cancel_recursion store
 
+space_recursion = (arr) ->
+  copy = []
+  for item in arr
+    if Array.isArray item then copy.push (space_recursion item)
+    else 
+      if (item.indexOf cursor) is -1 then copy.push item
+      else 
+        copy.push (item.replace cursor, ''), cursor
+  copy
 space = ->
-  recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item then copy.push (recursion item)
-      else 
-        if (item.indexOf cursor) is -1 then copy.push item
-        else 
-          copy.push (item.replace cursor, ''), cursor
-    copy
-  store = recursion store
+  store = space_recursion store
 
-enter = ->
-  recursion = (arr) ->
-    if cursor in arr
-      return arr.map (x) ->
-        if x is cursor then [x] else x
-    copy = []
-    for item in arr
-      if Array.isArray item then copy.push (recursion item)
+enter_recursion = (arr) ->
+  if cursor in arr
+    return arr.map (x) ->
+      if x is cursor then [x] else x
+  copy = []
+  for item in arr
+    if Array.isArray item then copy.push (enter_recursion item)
+    else 
+      point = item.indexOf cursor
+      if point is -1 then copy.push item
       else 
-        point = item.indexOf cursor
-        if point is -1 then copy.push item
-        else 
-          copy.push (item.replace cursor, ''), [cursor]
-    copy
-  store = recursion store
+        copy.push (item.replace cursor, ''), [cursor]
+  copy
+enter = ->
+  store = enter_recursion store
 
 blank = -> input ' '
 
+pgup_recursion = (arr) ->
+  copy = []
+  for item in arr
+    if Array.isArray item
+      if item[0] is cursor
+        copy.push cursor
+        copy.push item[1..] if item.length > 1
+      else copy.push (pgup_recursion item)
+    else if item is cursor
+      last_item = copy.pop()
+      if Array.isArray last_item
+        last_item.push cursor
+        copy.push last_item
+      else copy.push cursor, last_item
+    else
+      if item.indexOf(cursor) < 0 then copy.push item
+      else copy.push cursor, (item.replace cursor, '')
+  copy
 pgup = ->
   if store[0] is cursor then return 'skip'
-  recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item
-        if item[0] is cursor
-          copy.push cursor
-          copy.push item[1..] if item.length > 1
-        else copy.push (recursion item)
-      else if item is cursor
-        last_item = copy.pop()
-        if Array.isArray last_item
-          last_item.push cursor
-          copy.push last_item
-        else copy.push cursor, last_item
-      else
-        if item.indexOf(cursor) < 0 then copy.push item
-        else copy.push cursor, (item.replace cursor, '')
-    copy
-  store = recursion store
+  store = pgup_recursion store
 
 pgdown = ->
   store = reverse store
   do pgup
   store = reverse store
 
+home_recursion = (arr) ->
+  if cursor in arr and (arr[0] isnt cursor)
+    return [cursor].concat arr.filter (x) -> x isnt cursor
+  copy = []
+  for item in arr
+    if item[0] is cursor
+      copy.push cursor
+      copy.push item[1..] if item.length > 1
+    else
+      if Array.isArray item then copy.push (home_recursion item)
+      else 
+        find_cursor = item.match (new RegExp cursor)
+        if find_cursor?
+          copy.push "#{cursor}#{item.replace(cursor, '')}"
+        else copy.push item
+  copy
 home = ->
   if store[0]? and store[0] is cursor
     return 'nothing to do'
-  recursion = (arr) ->
-    if cursor in arr and (arr[0] isnt cursor)
-      return [cursor].concat arr.filter (x) -> x isnt cursor
-    copy = []
-    for item in arr
-      if item[0] is cursor
-        copy.push cursor
-        copy.push item[1..] if item.length > 1
-      else
-        if Array.isArray item then copy.push (recursion item)
-        else 
-          find_cursor = item.match (new RegExp cursor)
-          if find_cursor?
-            copy.push "#{cursor}#{item.replace(cursor, '')}"
-          else copy.push item
-    copy
-  store = recursion store
+  store = home_recursion store
 
 reverse = (arr) ->
   arr.reverse().map (item) ->
@@ -207,140 +207,146 @@ reverse_action = (action) ->
 
 end = -> reverse_action home
 
+remove_recursion = (arr) ->
+  arr.map (x) ->
+    if Array.isArray x
+      if cursor in x then cursor else (remove_recursion x)
+    else
+      if (x.indexOf cursor) is -1 then x else cursor
 remove  = ->
   if cursor in store
     store = [cursor]
     return 'done'
-  recursion = (arr) ->
-    arr.map (x) ->
-      if Array.isArray x
-        if cursor in x then cursor else (recursion x)
-      else
-        if (x.indexOf cursor) is -1 then x else cursor
-  store = recursion store
+  store = remove_recursion store
 
+left_recursion = (arr) ->
+  copy = []
+  for item in arr
+    if Array.isArray item
+      if item[0] is cursor
+        copy.push cursor
+        copy.push item[1..] if item.length > 1
+      else copy.push (left_recursion item)
+    else if item is cursor
+      # console.log 'copy: ', copy
+      last_item = copy.pop()
+      if Array.isArray last_item
+        last_item.push cursor
+        copy.push last_item
+      else copy.push "#{last_item}#{cursor}"
+    else
+      # console.log 'all strings', item
+      if item[0] is cursor
+        copy.push cursor
+        copy.push item[1..] if item.length > 1
+      else
+        point = item.indexOf cursor
+        # console.log 'find? ', find_cursor
+        if point < 0 then copy.push item
+        else 
+          part_a = "#{item[...point-1]}#{cursor}"
+          part_b = "#{item[point-1]}#{item[point+1..]}"
+          copy.push "#{part_a}#{part_b}"
+  copy
 left = ->
   if store[0] is cursor then return 'skip'
-  recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item
-        if item[0] is cursor
-          copy.push cursor
-          copy.push item[1..] if item.length > 1
-        else copy.push (recursion item)
-      else if item is cursor
-        # console.log 'copy: ', copy
-        last_item = copy.pop()
-        if Array.isArray last_item
-          last_item.push cursor
-          copy.push last_item
-        else copy.push "#{last_item}#{cursor}"
-      else
-        # console.log 'all strings', item
-        if item[0] is cursor
-          copy.push cursor
-          copy.push item[1..] if item.length > 1
-        else
-          point = item.indexOf cursor
-          # console.log 'find? ', find_cursor
-          if point < 0 then copy.push item
-          else 
-            item[point..point+1] = [cursor, item[point-1]]
-            copy.push item
-    copy
-  store = recursion store
+  store = left_recursion store
 
 right = -> reverse_action left
 
+down_recursion = (arr) ->
+  # console.log 'evenry time begin:: ', arr
+  copy = []
+  has_cursor = no
+  for item in arr
+    if item in [cursor, [cursor]] then has_cursor = yes
+    else if typeof item is 'string'
+      if item.match(new RegExp cursor)?
+        copy.push (item.replace cursor, '')
+        has_cursor = yes
+      else copy.push item
+    else
+      # console.log 'else... ', item
+      if has_cursor
+        item.unshift cursor
+        copy.push item
+        has_cursor = off
+      else
+        obj = down_recursion item
+        copy.push obj.value
+        if obj.has_cursor then copy.push cursor
+  obj =
+    value: copy
+    has_cursor: has_cursor
 down = ->
   copy_tail = store.concat().reverse()
   for item in copy_tail
     if Array.isArray item then break
     if item in [cursor, [cursor]] then return 'skip'
     unless (item.indexOf cursor) is -1 then return 'skip'
-  recursion = (arr) ->
-    # console.log 'evenry time begin:: ', arr
-    copy = []
-    has_cursor = no
-    for item in arr
-      if item in [cursor, [cursor]] then has_cursor = yes
-      else if typeof item is 'string'
-        if item.match(new RegExp cursor)?
-          copy.push (item.replace cursor, '')
-          has_cursor = yes
-        else copy.push item
-      else
-        # console.log 'else... ', item
-        if has_cursor
-          item.unshift cursor
-          copy.push item
-          has_cursor = off
-        else
-          obj = recursion item
-          copy.push obj.value
-          if obj.has_cursor then copy.push cursor
-    obj =
-      value: copy
-      has_cursor: has_cursor
-  store = (recursion store).value
+  store = (down_recursion store).value
   # console.log 'result: ', store
 
 up = -> reverse_action down
 
+left_step_recursion = (arr) ->
+  if arr[0] is cursor then return arr
+  copy = []
+  for item in arr
+    if Array.isArray item then copy.push (left_step_recursion item)
+    else if item is cursor
+      last_item = copy.pop()
+      copy.push cursor, last_item
+    else
+      if (item.indexOf cursor) is -1 then copy.push item
+      else copy.push cursor, item.replace(cursor, '')
+  copy
 left_step = ->
-  recursion = (arr) ->
-    if arr[0] is cursor then return arr
-    copy = []
-    for item in arr
-      if Array.isArray item then copy.push (recursion item)
-      else if item is cursor
-        last_item = copy.pop()
-        copy.push cursor, last_item
-      else
-        if (item.indexOf cursor) is -1 then copy.push item
-        else copy.push cursor, item.replace(cursor, '')
-    copy
-  store = recursion store
+  store = left_step_recursion store
 
 right_step = -> reverse_action left_step
 
 snippet = null
 
+copy_recursion = (arr) ->
+  for item in arr
+    if Array.isArray item
+      if cursor in item
+        snippet = item.filter (x) -> x isnt cursor
+      else copy_recursion item
+    else if item.indexOf(cursor) >= 0
+      snippet = item.replace cursor, ''
 ctrl_copy = ->
-  recursion = (arr) ->
-    for item in arr
-      if Array.isArray item
-        if cursor in item
-          snippet = item.filter (x) -> x isnt cursor
-        else recursion item
-      else if item.indexOf(cursor) >= 0
-        snippet = item.replace cursor, ''
-  recursion store
+  copy_recursion store
   # console.log snippet
 
-ctrl_cut = ->
-  if cursor in store then return 'skip'
-  recursion = (arr) ->
-    arr.map (item) ->
+cut_recursion = (arr) ->
+  arr.map (item) ->
+    if Array.isArray item
       if cursor in item
         snippet = item.filter (x) -> x isnt cursor
         return cursor
-      else if Array.isArray item then return recursion item
       else return item
-  store = recursion store
+    else
+      if (item.indexOf cursor) < 0 then return item
+      else 
+        snippet = item.replace cursor, ''
+        return cursor
+ctrl_cut = ->
+  if cursor in store then return 'skip'
+  store = cut_recursion store
   # console.log snippet
 
+paste_recursion = (arr) ->
+  copy = []
+  for item in arr
+    if Array.isArray item then copy.push (paste_recursion item)
+    else if item is cursor then copy.push snippet, cursor
+    else if (item.indexOf cursor) < 0 then copy.push item
+    else copy.push snippet, item
+  copy
 ctrl_paste = ->
-  recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item then copy.push (recursion item)
-      else if item is cursor then copy.push snippet, cursor
-      else if (item.indexOf cursor) < 0 then copy.push item
-      else copy.push snippet, item
-    copy
-  store = recursion store if snippet?
+  store = paste_recursion store if snippet?
 
 version_map =
   store: store
@@ -392,24 +398,24 @@ choose_version = (new_version_cursor) ->
 current_version = document.createElement 'header'
 current_version.innerHTML = 'current'
 
+view_recursion = (obj) ->
+  if obj is cursor then return current_version
+  if obj.commit?
+    footer = new_footer()
+    footer.onclick = (e) ->
+      choose_version obj
+      e.stopPropagation()
+      return false
+    footer.innerHTML+= "#{obj.commit}<br>"
+    footer.innerHTML+= "<span>#{obj.stemp}</span><br>"
+    obj.child.forEach (item) ->
+      result = view_recursion item
+      # console.log 'result: ', result
+      footer.appendChild result
+  footer
 view_version = ->
-  recursion = (obj) ->
-    if obj is cursor then return current_version
-    if obj.commit?
-      footer = new_footer()
-      footer.onclick = (e) ->
-        choose_version obj
-        e.stopPropagation()
-        return false
-      footer.innerHTML+= "#{obj.commit}<br>"
-      footer.innerHTML+= "<span>#{obj.stemp}</span><br>"
-      obj.child.forEach (item) ->
-        result = recursion item
-        # console.log 'result: ', result
-        footer.appendChild result
-    footer
   tag('box').innerHTML = ''
-  tag('box').appendChild (recursion version_map)
+  tag('box').appendChild (view_recursion version_map)
   'stay'
 
 esc = ->
