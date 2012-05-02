@@ -32,9 +32,14 @@ draw = (arr) ->
   "<div#{inline_block}>#{str}</div>"
 
 editor_mode = on
-store = ['45345', '345345', ['44', '5', 'sdfsdfsdf\t', ['444']]]
+store = ['\t']
 history = [store]
 current = 0
+
+history_generator = ->
+  history = history[..current]
+  history.push store
+  current+= 1
 
 window.onload = ->
   box = tag 'box'
@@ -42,7 +47,7 @@ window.onload = ->
 
   do refresh = ->
     box.innerHTML = draw store
-    console.log 'Refreshing :::: ', store
+    # console.log 'Refreshing :::: ', store
 
   document.onkeypress = (e) ->
     unless editor_mode then return 'locked'
@@ -53,35 +58,28 @@ window.onload = ->
         # console.log "(#{char}) in inputs"
         input char
         do refresh
-        history = history[..current]
-        history.push store
-        current+= 1
-        console.log history
-      return false
+        do history_generator
+      false
   document.onkeydown = (e) ->
     code = e.keyCode
     unless editor_mode
       unless code is 27 then return 'locked'
-    console.log 'keyCode .... ', code, e.ctrlKey
+    # console.log 'keyCode .... ', code, e.ctrlKey
     unless e.ctrlKey or e.altKey
       if control[''+code]?
         send_back = do control[''+code]
-        unless send_back is 'no need to refresh'
-          history = history[..current]
-          history.push store
-          current+= 1
+        unless send_back is 'stay'
           do refresh
+          do history_generator
         return false
     if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
         send_back = do control['c_'+code]
         unless send_back is 'no need to refresh'
           unless code in [89, 90]
-            history = history[..current]
-            history.push store
-            current+= 1
-          do refresh
-        return false
+            do refresh
+            do history_generator
+        false
 
 input = (char) ->
   recursion = (arr) ->
@@ -101,25 +99,21 @@ input = (char) ->
 
 cancel = ->
   # console.log 'called to cancel'
-  if store[0] is cursor
-    return 'nothing to do'
+  if store[0] is cursor then return 'skip'
   recursion = (arr) ->
-    if cursor in arr
-      return arr if arr[0] is cursor
-      cursor_place = arr.indexOf cursor
-      arr = arr[...cursor_place-1].concat arr[cursor_place..]
+    point = arr.indexOf cursor
+    unless point is -1
+      return arr if point is 0
+      arr = arr[...point-1].concat arr[point..]
       return arr
     copy = []
     for item in arr
-      if Array.isArray item
-        copy.push (recursion item)
+      if Array.isArray item then copy.push (recursion item)
       else
-        return cursor if item[0] is cursor
-        coll = ''
-        for c in item
-          if c is cursor then coll = coll[...-1]
-          coll+= c
-        copy.push coll
+        point = item.indexOf cursor
+        if point is -1 then copy.push item
+        else if point is 0 then copy.push cursor
+        else copy.push "#{item[...point-1]}#{item[point..]}"
     copy
   store = recursion store
 
@@ -129,11 +123,9 @@ space = ->
     for item in arr
       if Array.isArray item then copy.push (recursion item)
       else 
-        cursor_place = item.indexOf cursor
-        if cursor_place is -1 then copy.push item
+        if (item.indexOf cursor) is -1 then copy.push item
         else 
-          copy.push item.replace(cursor, '')
-          copy.push cursor
+          copy.push (item.replace cursor, ''), cursor
     copy
   store = recursion store
 
@@ -146,19 +138,17 @@ enter = ->
     for item in arr
       if Array.isArray item then copy.push (recursion item)
       else 
-        cursor_place = item.indexOf cursor
-        if cursor_place is -1 then copy.push item
+        point = item.indexOf cursor
+        if point is -1 then copy.push item
         else 
-          copy.push item.replace(cursor, '')
-          copy.push [cursor]
+          copy.push (item.replace cursor, ''), [cursor]
     copy
   store = recursion store
 
-blank = ->
-  input ' '
+blank = -> input ' '
 
 pgup = ->
-  if store[0] is cursor then return 'nothing'
+  if store[0] is cursor then return 'skip'
   recursion = (arr) ->
     copy = []
     for item in arr
@@ -175,8 +165,7 @@ pgup = ->
         else copy.push cursor, last_item
       else
         if item.indexOf(cursor) < 0 then copy.push item
-        else 
-          copy.push cursor, item.replace(cursor, '')
+        else copy.push cursor, (item.replace cursor, '')
     copy
   store = recursion store
 
@@ -187,7 +176,7 @@ pgdown = ->
 
 home = ->
   if store[0]? and store[0] is cursor
-    return 'top level, nothing to do'
+    return 'nothing to do'
   recursion = (arr) ->
     if cursor in arr and (arr[0] isnt cursor)
       return [cursor].concat arr.filter (x) -> x isnt cursor
@@ -207,19 +196,16 @@ home = ->
   store = recursion store
 
 reverse = (arr) ->
-  copy = []
-  for item in arr.reverse()
-    if Array.isArray item then copy.push (reverse item)
-    else 
-      coll = ''
-      coll+= c for c in item.split('').reverse()
-      copy.push coll
-  copy
+  arr.reverse().map (item) ->
+    if Array.isArray item then reverse item
+    else item.split('').reverse().join ''
 
-end = ->
+reverse_action = (action) ->
   store = reverse store
-  do home
+  do action
   store = reverse store
+
+end = -> reverse_action home
 
 remove  = ->
   if cursor in store
@@ -228,13 +214,13 @@ remove  = ->
   recursion = (arr) ->
     arr.map (x) ->
       if Array.isArray x
-        return if cursor in x then cursor else (recursion x)
+        if cursor in x then cursor else (recursion x)
       else
-        if x.match(new RegExp cursor)? then cursor else x
+        if (x.indexOf cursor) is -1 then x else cursor
   store = recursion store
 
 left = ->
-  if store[0] is cursor then return 'ok'
+  if store[0] is cursor then return 'skip'
   recursion = (arr) ->
     copy = []
     for item in arr
@@ -256,27 +242,23 @@ left = ->
           copy.push cursor
           copy.push item[1..] if item.length > 1
         else
-          find_cursor = item.match (new RegExp cursor)
+          point = item.indexOf cursor
           # console.log 'find? ', find_cursor
-          unless find_cursor? then copy.push item
+          if point < 0 then copy.push item
           else 
-            # console.log 'item to swap: ', item
-            swapit = new RegExp "(.)#{cursor}"
-            copy.push item.replace(swapit, "#{cursor}$1")
+            item[point..point+1] = [cursor, item[point-1]]
+            copy.push item
     copy
   store = recursion store
 
-right = ->
-  store = reverse store
-  do left
-  store = reverse store
+right = -> reverse_action left
 
 down = ->
   copy_tail = store.concat().reverse()
   for item in copy_tail
     if Array.isArray item then break
-    if item in [cursor, [cursor]] then return 'no need'
-    if item.match(new RegExp cursor)? then return 'yeah'
+    if item in [cursor, [cursor]] then return 'skip'
+    unless (item.indexOf cursor) is -1 then return 'skip'
   recursion = (arr) ->
     # console.log 'evenry time begin:: ', arr
     copy = []
@@ -285,7 +267,7 @@ down = ->
       if item in [cursor, [cursor]] then has_cursor = yes
       else if typeof item is 'string'
         if item.match(new RegExp cursor)?
-          copy.push item.replace((new RegExp cursor), '')
+          copy.push (item.replace cursor, '')
           has_cursor = yes
         else copy.push item
       else
@@ -304,10 +286,7 @@ down = ->
   store = (recursion store).value
   # console.log 'result: ', store
 
-up = ->
-  store = reverse store
-  do down
-  store = reverse store
+up = -> reverse_action down
 
 left_step = ->
   recursion = (arr) ->
@@ -319,17 +298,12 @@ left_step = ->
         last_item = copy.pop()
         copy.push cursor, last_item
       else
-        find_cursor = item.match (new RegExp cursor)
-        unless find_cursor? then copy.push item
-        else
-          copy.push cursor, item.replace(cursor, '')
+        if (item.indexOf cursor) is -1 then copy.push item
+        else copy.push cursor, item.replace(cursor, '')
     copy
   store = recursion store
 
-right_step = ->
-  store = reverse store
-  do left_step
-  store = reverse store
+right_step = -> reverse_action left_step
 
 snippet = null
 
@@ -339,31 +313,21 @@ ctrl_copy = ->
       if Array.isArray item
         if cursor in item
           snippet = item.filter (x) -> x isnt cursor
-          return 'got'
-        recursion item
-      else
-        if item.indexOf(cursor) >= 0
-          snippet = item.replace cursor, ''
-          return 'got'
+        else recursion item
+      else if item.indexOf(cursor) >= 0
+        snippet = item.replace cursor, ''
   recursion store
   # console.log snippet
 
 ctrl_cut = ->
-  if cursor in store then return 'wont do'
+  if cursor in store then return 'skip'
   recursion = (arr) ->
-    copy = []
-    for item in arr
-      if Array.isArray item
-        if cursor in item
-          copy.push cursor
-          snippet = item.filter (x) -> x isnt cursor
-        else copy.push (recursion item)
-      else
-        if item.indexOf(cursor) >= 0
-          copy.push cursor
-          snippet = item.replace(cursor, '')
-        else copy.push item
-    copy
+    arr.map (item) ->
+      if cursor in item
+        snippet = item.filter (x) -> x isnt cursor
+        return cursor
+      else if Array.isArray item then return recursion item
+      else return item
   store = recursion store
   # console.log snippet
 
@@ -373,52 +337,56 @@ ctrl_paste = ->
     for item in arr
       if Array.isArray item then copy.push (recursion item)
       else if item is cursor then copy.push snippet, cursor
-      else if item.indexOf(cursor) < 0 then copy.push item
+      else if (item.indexOf cursor) < 0 then copy.push item
       else copy.push snippet, item
     copy
-  if snippet? then store = recursion store
+  store = recursion store if snippet?
 
 version_map =
   store: store
-  stemp: 'no time'
+  stemp: '000000 00:00'
   child: [cursor]
-  commit: 'root'
+  commit: '/'
 
 version_cursor = version_map
 
 pair_num = (num) ->
   if num < 10 then '0'+(String num) else (String num)
 
-save_version = ->
+stemp = ->
   date_obj = new Date()
   year = (String date_obj.getFullYear())[2..3]
   month = pair_num (date_obj.getMonth() + 1)
   date = pair_num date_obj.getDate()
   hour = pair_num date_obj.getHours()
   minute = pair_num date_obj.getMinutes()
-  stemp = "#{year}#{month}#{date} #{hour}:#{minute}"
-  version_cursor.child.pop()
-  version_cursor.child.push (
-    store:store,
-    stemp:stemp,
-    child:[],
-    commit:prompt('commit')
-  )
-  last_item = version_cursor.child
-  console.log 'last_item: ', last_item
-  version_cursor = version_cursor.child[last_item.length-1]
-  version_cursor.child.push cursor
+  "#{year}#{month}#{date} #{hour}:#{minute}"
+
+history_reset = ->
   history = [store]
   current = 0
-  'no need to refresh'
+
+save_version = ->
+  version_cursor.child.pop()
+  version_cursor.child.push (
+    store: store
+    stemp: do stemp
+    child: []
+    commit: prompt('add phrase to commit')
+  )
+  last_item = version_cursor.child
+  # console.log 'last_item: ', last_item
+  version_cursor = version_cursor.child[last_item.length-1]
+  version_cursor.child.push cursor
+  do history_reset
+  'stay'
 
 choose_version = (new_version_cursor) ->
   version_cursor.child.pop()
   version_cursor = new_version_cursor
   store = version_cursor.store
   version_cursor.child.push cursor
-  history = [store]
-  current = 0
+  do history_reset
   do view_version
 
 current_version = document.createElement 'header'
@@ -434,16 +402,15 @@ view_version = ->
         e.stopPropagation()
         return false
       footer.innerHTML+= "#{obj.commit}<br>"
-      footer.innerHTML+= "#{obj.stemp}<br>"
+      footer.innerHTML+= "<span>#{obj.stemp}</span><br>"
       obj.child.forEach (item) ->
         result = recursion item
-        console.log 'result: ', result
+        # console.log 'result: ', result
         footer.appendChild result
-      footer.childNodes
     footer
   tag('box').innerHTML = ''
   tag('box').appendChild (recursion version_map)
-  'no need to refresh'
+  'stay'
 
 esc = ->
   if editor_mode
@@ -452,7 +419,7 @@ esc = ->
   else
     (tag 'box').innerHTML = draw store
     editor_mode = on
-  'no need to refresh'
+  'stay'
 
 go_ahead = ->
   if history[current+1]?
@@ -488,6 +455,5 @@ control =
   'c_88': ctrl_cut
   'c_80': ctrl_paste
   'c_83': save_version
-  'c_86': view_version
   'c_90': go_back
   'c_89': go_ahead

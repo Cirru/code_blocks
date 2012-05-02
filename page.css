@@ -43,6 +43,9 @@ footer {
   vertical-align: top;
   -webkit-border-radius: 8px;
 }
+#box>* {
+  margin: 10px;
+}
 header {
   width: 70px;
   height: 16px;
@@ -53,4 +56,8 @@ header {
   background: #fad1d1;
   display: inline-block;
   -webkit-border-radius: 3px;
+}
+span {
+  font-size: 10px;
+  color: #e8a17d;
 }
