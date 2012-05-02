@@ -5,7 +5,7 @@ new_scope = (parent) ->
     varable: {}
     parent:  parent
     seek_varable: (str) ->
-      if @varable[str]? then @varable[str]
+      if @varable[str]? then @varable
       else
         if @parent? then @parent.seek_varable str
         else null
@@ -19,7 +19,7 @@ global_scope =
   varable:
     aa: 'nothi'
   seek_varable: (str) ->
-    if @varable[str]? then @varable[str]
+    if @varable[str]? then @varable
     else undefined
   seek_pattern: -> @pattern
 
@@ -29,7 +29,11 @@ two.pattern.push 3,5,6
 
 console.log two.seek_varable 'aa'
 one.varable.aa = 'xx'
+two.varable.aa = 'xx'
 console.log two.seek_varable 'aa'
 console.log '--------------'
 console.log one.seek_pattern()
 console.log two.seek_pattern()
+two.seek_varable('aa').aa = 'rerrrr'
+console.log one.varable
+console.log two.varable
