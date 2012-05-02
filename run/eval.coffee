@@ -39,7 +39,19 @@ default_pattern = array_list _,
         if isNaN as_number then return null
         args.push as_number
       args
-    handle: (args) -> args.reduce (x, y) -> x + y
+    handler: (args) -> args.reduce (x, y) -> x + y
+  }
+  {
+    pattern: (list) ->
+      unless list.shift() is '-' then return null
+      args = []
+      for item in list
+        if Array.isArray item then as_number = run item
+        else as_number = Number item
+        if isNaN as_number then return null
+        args.push as_number
+      args
+    handler: (args) -> args.reduce (x, y) -> x - y
   }
 
 for item in default_pattern
@@ -47,7 +59,11 @@ for item in default_pattern
 
 run = (arr, scope) ->
   for item in scope.pattern
-    if (args = item.pattern arr)? then return item.handle args
+    if (args = item.pattern arr.concat())?
+      # failed while there was no concat!
+      return item.handler args.concat()
   throw new Error 'no such macro!'
 
 ll (run ['+', '1', '2', '3'], global_scope)
+ll (run ['-', '1', '2', '3'], global_scope)
+ll (run ['*', '1', '2', '3'], global_scope)
