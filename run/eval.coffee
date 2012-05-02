@@ -25,37 +25,45 @@ global_scope =
     else undefined
   seek_pattern: -> @pattern
 
-array_list = (v...) -> v[1..]
+arr_lines = (v...) -> v[1..]
 _ = 0
+obj_lines = (a, b) -> b
 
-default_pattern = array_list _,
-  {
-    pattern: (list) ->
-      unless list.shift() is '+' then return null
-      args = []
-      for item in list
-        if Array.isArray item then as_number = run item
-        else as_number = Number item
-        if isNaN as_number then return null
-        args.push as_number
-      args
-    handler: (args) -> args.reduce (x, y) -> x + y
-  }
-  {
-    pattern: (list) ->
-      unless list.shift() is '-' then return null
-      args = []
-      for item in list
-        if Array.isArray item then as_number = run item
-        else as_number = Number item
-        if isNaN as_number then return null
-        args.push as_number
-      args
-    handler: (args) -> args.reduce (x, y) -> x - y
-  }
+default_pattern = arr_lines _,
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '+'
+    handler: (arg) -> arg.reduce (x, y) -> x + y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '-'
+    handler: (arg) -> arg.reduce (x, y) -> x - y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '*'
+    handler: (arg) -> arg.reduce (x, y) -> x * y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '/'
+    handler: (arg) -> arg.reduce (x, y) -> x / y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '/'
+    handler: (arg) -> arg.reduce (x, y) -> x / y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '/'
+    handler: (arg) -> arg.reduce (x, y) -> x / y
+  obj_lines _,
+    pattern: (arr) -> calculator_pattern arr, '%'
+    handler: (arg) -> arg.reduce (x, y) -> x % y
 
 for item in default_pattern
   global_scope.pattern.push item
+
+calculator_pattern = (arr, method) ->
+  unless arr.shift() is method then return null
+  args = []
+  for item in arr
+    if Array.isArray item then as_number = run item
+    else as_number = Number item
+    if isNaN as_number then return null
+    args.push as_number
+  args
 
 run = (arr, scope) ->
   for item in scope.pattern
@@ -67,3 +75,5 @@ run = (arr, scope) ->
 ll (run ['+', '1', '2', '3'], global_scope)
 ll (run ['-', '1', '2', '3'], global_scope)
 ll (run ['*', '1', '2', '3'], global_scope)
+ll (run ['/', '1', '2', '3'], global_scope)
+ll (run ['%', '4', '456', '3'], global_scope)
