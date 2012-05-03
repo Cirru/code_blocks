@@ -8,11 +8,10 @@ new_scope = (parent) ->
     parent:  parent
     find_varable: (str) ->
       if @varable[str]? then @varable
-      else
-        if @parent? then (@parent.find_varable str) else skip
+      else if @parent? then @parent.find_varable str else skip
     find_pattern: ->
-      if @parent? then @pattern.concat @parent.find_pattern()
-      else @pattern
+      more = if @parent? then @parent.find_pattern() else @pattern
+      @pattern.concat more
 
 global_scope =
   pattern: []
@@ -28,7 +27,6 @@ _ = 0
 skip = 'skip while pattern not matching'
 
 default_pattern = arr_lines _,
-
   (arr, scope) ->
     if arr[1] in ('+-*/%'.split '')
       var_name = arr.shift()
