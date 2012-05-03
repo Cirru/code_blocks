@@ -112,7 +112,7 @@ default_pattern = arr_lines _,
     sub_scope = new_scope scope
     new_pattern = (arr, sub_scope) ->
       return skip unless arr.length >= args.length
-      for item, index in action
+      for item, index in args
         ll item
         if Array.isArray item
           sub_scope.varable[item[0]] = arr[index]
@@ -148,5 +148,5 @@ run (mk 'echo a')
 run (mk 'a + 30 4')
 run (mk 'echo a')
 console.log '----------------'
-run ['pattern', ['ll', ['a']], ['echo', 'a']]
-run ['ll', 'xx']
+run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', 'a']]
+run ['ll', 'qq', 'xx', 'ff']
