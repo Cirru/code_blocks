@@ -28,46 +28,34 @@ _ = 0
 skip = 'skip while pattern not matching'
 
 default_pattern = arr_lines _,
+
   (arr, scope) ->
-    method = arr.shift()
-    return skip unless method in '+-*/%'.split ''
+    if arr[1] in ('+-*/%'.split '')
+      var_name = arr.shift()
+      method = arr.shift()
+    else if arr[0] in ('+-*/%'.split '')
+      method = arr.shift()
+    else return skip
+    if var_name?
+      find_varable = scope.find_varable var_name
+      return skip unless (target = find_varable)?
+      arr.unshift target[var_name]
     args = []
     for item in arr
-      if Array.isArray item then as_number = run item, scope
-      else as_number = Number item
-      return skip if isNaN as_number
-      args.push as_number
-    args.reduce (x, y) ->
+      if Array.isArray item then args.push (run item, scope)
+      else 
+        as_number = Number item
+        return skip if isNaN as_number
+        args.push as_number
+    result = args.reduce (x, y) ->
       switch method
         when '+' then x + y
         when '-' then x - y
         when '*' then x * y
         when '/' then x / y
         when '%' then x % y
-
-  (arr, scope) ->
-    method = arr[1]
-    return skip unless method in '+-*/%'.split ''
-    var_name = arr[0]
-    args = []
-    for item in arr[2..]
-      if Array.isArray item then args.push (run item, scope)
-      else
-        as_number = Number item
-        return skip if isNaN as_number
-        args.push as_number
-    find_varable = scope.find_varable var_name
-    return skip unless (target = find_varable)?
-    target[var_name] = args.reduce.apply args,
-      arr_lines _,
-        (x, y) ->
-          switch method
-            when '+' then x + y
-            when '-' then x - y
-            when '*' then x * y
-            when '/' then x / y
-            when '%' then x % y
-        target[var_name]
+    target[var_name] = result if var_name?
+    result
 
   (arr, scope) ->
     return skip unless arr[1] in ['put', '=']
