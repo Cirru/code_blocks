@@ -30,7 +30,7 @@ skip = 'skip while pattern not matching'
 default_pattern = arr_lines _,
   (arr, scope) ->
     method = arr.shift()
-    return skip unless method in ['+', '-', '*', '/', '%']
+    return skip unless method in '+-*/%'.split ''
     args = []
     for item in arr
       if Array.isArray item then as_number = run item, scope
@@ -44,6 +44,30 @@ default_pattern = arr_lines _,
         when '*' then x * y
         when '/' then x / y
         when '%' then x % y
+
+  (arr, scope) ->
+    method = arr[1]
+    return skip unless method in '+-*/%'.split ''
+    var_name = arr[0]
+    args = []
+    for item in arr[2..]
+      if Array.isArray item then args.push (run item, scope)
+      else
+        as_number = Number item
+        return skip if isNaN as_number
+        args.push as_number
+    find_varable = scope.find_varable var_name
+    return skip unless (target = find_varable)?
+    target[var_name] = args.reduce.apply args,
+      arr_lines _,
+        (x, y) ->
+          switch method
+            when '+' then x + y
+            when '-' then x - y
+            when '*' then x * y
+            when '/' then x / y
+            when '%' then x % y
+        target[var_name]
 
   (arr, scope) ->
     return skip unless arr[1] in ['put', '=']
@@ -83,16 +107,17 @@ default_pattern = arr_lines _,
     return skip unless arr.length > 0
     if arr.length is 1
       if isNaN (Number arr[0]) then return skip
-    arr.map (item) ->
+    arr = arr.map (item) ->
       if Array.isArray item then run item, scope
       else 
         as_number = Number item
         if isNaN as_number then item else as_number
+    if arr.length is 1 then arr[0] else arr
 
 for item in default_pattern
   global_scope.pattern.push item
 
-run = (arr, scope) ->
+run = (arr, scope=global_scope) ->
   for pattern in scope.pattern
     result = pattern arr.concat(), scope
     return result unless result is skip
@@ -105,3 +130,11 @@ run ['echo', 'var', 'ert'], global_scope
 ll run ['array', '2', '3'], global_scope
 ll run ['number', '2', ['+', '2', '3'], '4'], global_scope
 ###
+
+mk = (str) -> str.split ' '
+
+run (mk 'echo a')
+run ['a', 'put', ['number', '3']]
+run (mk 'echo a')
+run (mk 'a + 30 4')
+run (mk 'echo a')
