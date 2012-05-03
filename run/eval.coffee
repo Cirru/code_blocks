@@ -29,15 +29,15 @@ skip = 'skip while pattern not matching'
 default_pattern = arr_lines _,
   (arr, scope) ->
     if arr[1] in ('+-*/%'.split '')
-      var_name = arr.shift()
+      varable = arr.shift()
       method = arr.shift()
     else if arr[0] in ('+-*/%'.split '')
       method = arr.shift()
     else return skip
-    if var_name?
-      find_varable = scope.find_varable var_name
+    if varable?
+      find_varable = scope.find_varable varable
       return skip unless (target = find_varable)?
-      arr.unshift target[var_name]
+      arr.unshift target[varable]
     args = []
     for item in arr
       if Array.isArray item then args.push (run item, scope)
@@ -52,19 +52,19 @@ default_pattern = arr_lines _,
         when '*' then x * y
         when '/' then x / y
         when '%' then x % y
-    target[var_name] = result if var_name?
+    target[varable] = result if varable?
     result
 
   (arr, scope) ->
     return skip unless arr[1] in ['put', '=']
     return skip unless arr.length >= 3
-    var_name = arr[0]
+    varable = arr[0]
     args = arr[2..].map (item) ->
       if Array.isArray item then run item, scope else item
-    find_varable = scope.find_varable var_name
+    find_varable = scope.find_varable varable
     target = if find_varable? then find_varable else scope
     value = if args.length is 1 then args[0] else args
-    target.varable[var_name] = value
+    target.varable[varable] = value
 
   (arr, scope) ->
     return skip unless arr[0] in ['echo', 'log']
@@ -100,6 +100,29 @@ default_pattern = arr_lines _,
         if isNaN as_number then item else as_number
     if arr.length is 1 then arr[0] else arr
 
+  (arr, scope) ->
+    return skip unless arr.length >= 3
+    if arr.shift() is 'pattern' then ''
+    else if arr[1] is 'pattern'
+      varable = arr.shift()
+      arr.shift()
+    else return skip
+    args = arr.shift()
+    action = arr
+    sub_scope = new_scope scope
+    new_pattern = (arr, sub_scope) ->
+      return skip unless arr.length >= args.length
+      for item, index in action
+        ll item
+        if Array.isArray item
+          sub_scope.varable[item[0]] = arr[index]
+        else return skip unless arr[index] is item
+      run item, sub_scope for item in action[0...]
+      run action.reverse()[0], sub_scope
+    scope.pattern.push new_pattern
+    scope.varable[varable] = new_pattern if varable?
+    new_pattern
+
 for item in default_pattern
   global_scope.pattern.push item
 
@@ -124,3 +147,6 @@ run ['a', 'put', ['number', '3']]
 run (mk 'echo a')
 run (mk 'a + 30 4')
 run (mk 'echo a')
+console.log '----------------'
+run ['pattern', ['ll', ['a']], ['echo', 'a']]
+run ['ll', 'xx']
