@@ -21,12 +21,12 @@ global_scope =
     if @varable[str]? then @varable else undefined
   find_pattern: -> @pattern
 
-arr_lines = (v...) -> v[1..]
+__ = (v...) -> v[1..]
 _ = 0
 
 skip = 'skip while pattern not matching'
 
-default_pattern = arr_lines _,
+default_pattern = __ _,
   (arr, scope) ->
     if arr[1] in ('+-*/%'.split '')
       varable = arr.shift()
@@ -93,12 +93,33 @@ default_pattern = arr_lines _,
     return skip unless arr.length > 0
     if arr.length is 1
       if isNaN (Number arr[0]) then return skip
-    arr = arr.map (item) ->
+    copy = []
+    for item in arr
       if Array.isArray item then run item, scope
       else 
         as_number = Number item
-        if isNaN as_number then item else as_number
-    if arr.length is 1 then arr[0] else arr
+        if isNaN as_number then return skip
+        else copy.push as_number
+    if copy.length is 0 then skip
+    else if copy.length is 1 then arr[0]
+    else copy
+
+  (arr, scope) ->
+    return skip unless arr.shift() is 'string'
+    return skip unless arr.length > 0
+    if arr.length is 1 then return (String arr[0])
+    else return arr.map (item) -> String item
+
+  (arr, scope) ->
+    return skip unless arr.shift() is 'bool'
+    copy = []
+    for item in arr
+      if item in ['yes', 'true', 'on', 'ok'] then copy.push true
+      else if item in ['no', 'false', 'off'] then copy.push false
+      else return skip
+    if copy.length is 0 then skip
+    else if copy.length is 1 then copy[0]
+    else copy
 
   (arr, scope) ->
     return skip unless arr.length >= 3
@@ -119,15 +140,30 @@ default_pattern = arr_lines _,
         else return skip unless arr[index] is item
       run item, sub_scope for item in action[0...]
       run action.reverse()[0], sub_scope
-    scope.pattern.push new_pattern
+    scope.pattern.unshift new_pattern
     scope.varable[varable] = new_pattern if varable?
     new_pattern
+
+  (arr, scope) ->
+    return skip unless arr.shift() is 'array?'
+    copy = []
+    ll arr
+    for item in arr
+      if Array.isArray item
+        result = run item, scope
+        return skip if result is skip
+      else
+        varable = scope.find_varable item
+        if varable? then result = varable[item]
+        else return skip
+      copy.push (Array.isArray item)
+    if copy.length is 1 then copy[0] else copy
 
 for item in default_pattern
   global_scope.pattern.push item
 
 run = (arr, scope=global_scope) ->
-  for pattern in scope.pattern
+  for pattern in scope.find_pattern()
     result = pattern arr.concat(), scope
     return result unless result is skip
   throw new Error 'no pattern found'
@@ -148,5 +184,9 @@ run (mk 'echo a')
 run (mk 'a + 30 4')
 run (mk 'echo a')
 console.log '----------------'
-run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', 'a']]
+run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['string', '444']]]
 run ['ll', 'qq', 'xx', 'ff']
+console.log '----------------'
+ll (run (mk 'number 2 3 4 4 5'))
+ll (run (mk 'string 23_45'))
+ll (run ['array?', ['array', '2']])
