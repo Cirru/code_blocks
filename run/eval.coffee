@@ -10,7 +10,7 @@ new_scope = (parent) ->
       if @varable[str]? then @varable
       else
         if @parent? then @parent.find_varable str
-        else null
+        else skip
     find_pattern: ->
       if @parent?
         @pattern.concat @parent.find_pattern()
@@ -27,113 +27,84 @@ global_scope =
 
 arr_lines = (v...) -> v[1..]
 _ = 0
-obj_lines = (a, b) -> b
+
+skip = 'skip while pattern not matching'
 
 default_pattern = arr_lines _,
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '+'
-    handler: (args, scope) -> args.reduce (x, y) -> x + y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '-'
-    handler: (args, scope) -> args.reduce (x, y) -> x - y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '*'
-    handler: (args, scope) -> args.reduce (x, y) -> x * y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '/'
-    handler: (args, scope) -> args.reduce (x, y) -> x / y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '/'
-    handler: (args, scope) -> args.reduce (x, y) -> x / y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '/'
-    handler: (args, scope) -> args.reduce (x, y) -> x / y
-  obj_lines _,
-    pattern: (arr) -> calculator_pattern arr, '%'
-    handler: (args, scope) -> args.reduce (x, y) -> x % y
+  (arr, scope) -> math_pattern arr, global_scope
 
-  obj_lines _,
-    pattern: (arr) ->
-      return null unless arr[1] in ['put', '=']
-      return null unless arr.length >= 3
-      args = [arr[0]].concat arr[2..]
-    handler: (args, scope) ->
-      var_name = args[0]
-      arg_list = args[1..].map (item) ->
-        if Array.isArray item then run item, scope
-        else item
-      find_varable = scope.find_varable var_name
-      if find_varable? then varable = find_varable
-      else varable = scope
-      if arg_list.length is 1 then value = arg_list[0]
-      else value = arg_list
-      varable.varable[var_name] = value
-      value
+  (arr, scope) ->
+    return skip unless arr[1] in ['put', '=']
+    return skip unless arr.length >= 3
+    var_name = arr[0]
+    args = arr[2..].map (item) ->
+      if Array.isArray item then run item, scope else item
+    find_varable = scope.find_varable var_name
+    target = if find_varable? then find_varable else scope
+    value = if args.length is 1 then args[0] else args
+    target.varable[var_name] = value
 
-  obj_lines _,
-    pattern: (arr) ->
-      return null unless arr[0] in ['echo', 'log']
-      return null unless arr.length >= 2
-      args = arr[1..]
-    handler: (args, scope) ->
-      console.log.apply scope, args.map (item) ->
-        if Array.isArray item then run item, scope
-        else 
-          find_varable = scope.find_varable item
-          if find_varable? then find_varable[item]
-          else '(undefined)'
+  (arr, scope) ->
+    return skip unless arr[0] in ['echo', 'log']
+    return skip unless arr.length >= 2
+    args = arr[1..]
+    content = args.map (item) ->
+      if Array.isArray item then run item, scope
+      else 
+        find_varable = scope.find_varable item
+        if find_varable? then find_varable[item]
+        else '(undefined)'
+    console.log.apply scope, content
+    content
 
-  obj_lines _,
-    pattern: (arr) ->
-      return null unless arr.shift() is 'array'
-      return null unless arr.length > 0
-      args = arr
-    handler: (args, scope) ->
-      args.map (item) ->
-        if Array.isArray item then run item, scope
-        else 
-          as_number = Number item
-          if isNaN as_number then item else as_number
+  (arr, scope) ->
+    return skip unless arr.shift() is 'array'
+    return skip unless arr.length > 0
+    arr.map (item) ->
+      if Array.isArray item then run item, scope
+      else 
+        as_number = Number item
+        if isNaN as_number then item else as_number
 
-  obj_lines _,
-    pattern: (arr) ->
-      return null unless arr.shift() is 'number'
-      return null unless arr.length > 0
-      if arr.length is 1
-        if isNaN (Number arr[0]) then return null
-      args = arr
-    handler: (args, scope) ->
-      copy = []
-      for item in args
-        if Array.isArray item then copy.push (run item, scope)
-        else 
-          as_number = Number item
-          if isNaN as_number then copy.push item
-          else copy.push as_number
-      copy
+  (arr, scope) ->
+    return skip unless arr.shift() is 'number'
+    return skip unless arr.length > 0
+    if arr.length is 1
+      if isNaN (Number arr[0]) then return skip
+    arr.map (item) ->
+      if Array.isArray item then run item, scope
+      else 
+        as_number = Number item
+        if isNaN as_number then item else as_number
 
 for item in default_pattern
   global_scope.pattern.push item
 
-calculator_pattern = (arr, method) ->
-  return null unless arr.shift() is method
+math_pattern = (arr, scope) ->
+  method = arr.shift()
+  return skip unless method in ['+', '-', '*', '/', '%']
   args = []
   for item in arr
-    if Array.isArray item then as_number = run item, global_scope
+    if Array.isArray item then as_number = run item, scope
     else as_number = Number item
-    return null if isNaN as_number
+    return skip if isNaN as_number
     args.push as_number
-  args
+  args.reduce (x, y) ->
+    switch method
+      when '+' then x + y
+      when '-' then x - y
+      when '*' then x * y
+      when '/' then x / y
+      when '%' then x % y
 
 run = (arr, scope) ->
-  for item in scope.pattern
-    if (args = item.pattern arr.concat())?
-      # failed while there was no concat!
-      return item.handler args.concat(), scope
-  throw new Error 'no such macro!'
+  for pattern in scope.pattern
+    result = pattern arr.concat(), scope
+    return result unless result is skip
+  throw new Error 'no pattern found'
 
-ll (run ['+', '2', ['+', '3', '3']], global_scope)
+ll (run ['+', '2', ['/', '3', '3']], global_scope)
 ll (run ['var', '=', ['+', '2', '3']], global_scope)
-# run ['echo', 'var', 'ert'], global_scope
+run ['echo', 'var', 'ert'], global_scope
 ll run ['array', '2', '3'], global_scope
-ll run ['number', '2', '4'], global_scope
+ll run ['number', '2', ['+', '2', '3'], '4'], global_scope
