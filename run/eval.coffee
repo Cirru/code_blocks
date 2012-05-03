@@ -9,11 +9,9 @@ new_scope = (parent) ->
     find_varable: (str) ->
       if @varable[str]? then @varable
       else
-        if @parent? then @parent.find_varable str
-        else skip
+        if @parent? then (@parent.find_varable str) else skip
     find_pattern: ->
-      if @parent?
-        @pattern.concat @parent.find_pattern()
+      if @parent? then @pattern.concat @parent.find_pattern()
       else @pattern
 
 global_scope =
@@ -21,8 +19,7 @@ global_scope =
   varable:
     aa: 'nothi'
   find_varable: (str, scope) ->
-    if @varable[str]? then @varable
-    else undefined
+    if @varable[str]? then @varable else undefined
   find_pattern: -> @pattern
 
 arr_lines = (v...) -> v[1..]
@@ -31,7 +28,22 @@ _ = 0
 skip = 'skip while pattern not matching'
 
 default_pattern = arr_lines _,
-  (arr, scope) -> math_pattern arr, global_scope
+  (arr, scope) ->
+    method = arr.shift()
+    return skip unless method in ['+', '-', '*', '/', '%']
+    args = []
+    for item in arr
+      if Array.isArray item then as_number = run item, scope
+      else as_number = Number item
+      return skip if isNaN as_number
+      args.push as_number
+    args.reduce (x, y) ->
+      switch method
+        when '+' then x + y
+        when '-' then x - y
+        when '*' then x * y
+        when '/' then x / y
+        when '%' then x % y
 
   (arr, scope) ->
     return skip unless arr[1] in ['put', '=']
@@ -80,31 +92,16 @@ default_pattern = arr_lines _,
 for item in default_pattern
   global_scope.pattern.push item
 
-math_pattern = (arr, scope) ->
-  method = arr.shift()
-  return skip unless method in ['+', '-', '*', '/', '%']
-  args = []
-  for item in arr
-    if Array.isArray item then as_number = run item, scope
-    else as_number = Number item
-    return skip if isNaN as_number
-    args.push as_number
-  args.reduce (x, y) ->
-    switch method
-      when '+' then x + y
-      when '-' then x - y
-      when '*' then x * y
-      when '/' then x / y
-      when '%' then x % y
-
 run = (arr, scope) ->
   for pattern in scope.pattern
     result = pattern arr.concat(), scope
     return result unless result is skip
   throw new Error 'no pattern found'
 
+###
 ll (run ['+', '2', ['/', '3', '3']], global_scope)
 ll (run ['var', '=', ['+', '2', '3']], global_scope)
 run ['echo', 'var', 'ert'], global_scope
 ll run ['array', '2', '3'], global_scope
 ll run ['number', '2', ['+', '2', '3'], '4'], global_scope
+###
