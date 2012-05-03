@@ -54,8 +54,8 @@ default_pattern = arr_lines _,
 
   obj_lines _,
     pattern: (arr) ->
-      unless arr[1] in ['put', '='] then return null
-      unless arr.length >= 3 then return null
+      return null unless arr[1] in ['put', '=']
+      return null unless arr.length >= 3
       args = [arr[0]].concat arr[2..]
     handler: (args, scope) ->
       var_name = args[0]
@@ -72,8 +72,8 @@ default_pattern = arr_lines _,
 
   obj_lines _,
     pattern: (arr) ->
-      unless arr[0] in ['echo', 'log'] then return null
-      unless arr.length >= 2 then return null
+      return null unless arr[0] in ['echo', 'log']
+      return null unless arr.length >= 2
       args = arr[1..]
     handler: (args, scope) ->
       console.log.apply scope, args.map (item) ->
@@ -83,16 +83,29 @@ default_pattern = arr_lines _,
           if find_varable? then find_varable[item]
           else '(undefined)'
 
+  obj_lines _,
+    pattern: (arr) ->
+      return null unless arr.shift() is 'array'
+      return null unless arr.length > 0
+      ll arr
+      args = arr
+    handler: (args, scope) ->
+      args.map (item) ->
+        if Array.isArray item then run item, scope
+        else 
+          as_number = Number item
+          if isNaN as_number then item else as_number
+
 for item in default_pattern
   global_scope.pattern.push item
 
 calculator_pattern = (arr, method) ->
-  unless arr.shift() is method then return null
+  return null unless arr.shift() is method
   args = []
   for item in arr
     if Array.isArray item then as_number = run item, global_scope
     else as_number = Number item
-    if isNaN as_number then return null
+    return null if isNaN as_number
     args.push as_number
   args
 
@@ -105,4 +118,5 @@ run = (arr, scope) ->
 
 ll (run ['+', '2', ['+', '3', '3']], global_scope)
 ll (run ['var', '=', ['+', '2', '3']], global_scope)
-run ['echo', 'var', 'ert'], global_scope
+# run ['echo', 'var', 'ert'], global_scope
+ll run ['array', '2', '3'], global_scope
