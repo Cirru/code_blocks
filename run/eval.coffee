@@ -87,7 +87,6 @@ default_pattern = arr_lines _,
     pattern: (arr) ->
       return null unless arr.shift() is 'array'
       return null unless arr.length > 0
-      ll arr
       args = arr
     handler: (args, scope) ->
       args.map (item) ->
@@ -95,6 +94,23 @@ default_pattern = arr_lines _,
         else 
           as_number = Number item
           if isNaN as_number then item else as_number
+
+  obj_lines _,
+    pattern: (arr) ->
+      return null unless arr.shift() is 'number'
+      return null unless arr.length > 0
+      if arr.length is 1
+        if isNaN (Number arr[0]) then return null
+      args = arr
+    handler: (args, scope) ->
+      copy = []
+      for item in args
+        if Array.isArray item then copy.push (run item, scope)
+        else 
+          as_number = Number item
+          if isNaN as_number then copy.push item
+          else copy.push as_number
+      copy
 
 for item in default_pattern
   global_scope.pattern.push item
@@ -120,3 +136,4 @@ ll (run ['+', '2', ['+', '3', '3']], global_scope)
 ll (run ['var', '=', ['+', '2', '3']], global_scope)
 # run ['echo', 'var', 'ert'], global_scope
 ll run ['array', '2', '3'], global_scope
+ll run ['number', '2', '4'], global_scope
