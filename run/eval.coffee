@@ -15,8 +15,7 @@ new_scope = (parent) ->
 
 global_scope =
   pattern: []
-  varable:
-    aa: 'nothi'
+  varable: {}
   find_varable: (str, scope) ->
     if @varable[str]? then @varable else undefined
   find_pattern: -> @pattern
@@ -42,9 +41,9 @@ default_pattern = __ _,
     for item in arr
       if Array.isArray item then args.push (run item, scope)
       else 
-        as_number = Number item
-        return skip if isNaN as_number
-        args.push as_number
+        find_varable = scope.find_varable item
+        return skip unless find_varable?
+        args.push find_varable[item]
     result = args.reduce (x, y) ->
       switch method
         when '+' then x + y
@@ -56,7 +55,6 @@ default_pattern = __ _,
     result
 
   (arr, scope) ->
-    ll arr
     return skip unless arr[1] in ['put', '=']
     return skip unless arr.length >= 3
     varable = arr[0]
@@ -108,7 +106,7 @@ default_pattern = __ _,
         if isNaN as_number then return skip
         else copy.push as_number
     if copy.length is 0 then skip
-    else if copy.length is 1 then arr[0]
+    else if copy.length is 1 then copy[0]
     else copy
 
   (arr, scope) ->
@@ -132,23 +130,28 @@ default_pattern = __ _,
 
   (arr, scope) ->
     return skip unless arr.length >= 3
-    if arr.shift() is 'pattern' then ''
+    if arr[0] is 'pattern' then arr.shift()
     else if arr[1] is 'pattern'
       varable = arr.shift()
       arr.shift()
     else return skip
     args = arr.shift()
     action = arr
-    sub_scope = new_scope scope
-    new_pattern = (arr, sub_scope) ->
+    new_pattern = (arr, get_scope) ->
       return skip unless arr.length >= args.length
+      sub_scope = new_scope get_scope
       for item, index in args
-        ll item
         if Array.isArray item
-          sub_scope.varable[item[0]] = arr[index]
+          if Array.isArray arr[index]
+            sub_scope.varable[item] =
+              run arr[index], get_scope
+          else
+            find_varable = get_scope.find_varable arr[index]
+            return skip unless find_varable?
+            sub_scope.varable[item] = find_varable[arr[index]]
         else return skip unless arr[index] is item
       run item, sub_scope for item in action[0...]
-      run action.reverse()[0], sub_scope
+      run action[action.length-1], sub_scope
     scope.pattern.unshift new_pattern
     scope.varable[varable] = new_pattern if varable?
     new_pattern
@@ -183,7 +186,6 @@ default_pattern = __ _,
       return skip if true_action.length is 0
       return skip if false_action.length is 0
     right = run check, scope
-    ll 'herer'
     if right
       run item, scope for item in true_action[...-1]
       run true_action[true_action.length-1], scope
@@ -193,6 +195,7 @@ default_pattern = __ _,
         run false_action[false_action.length-1], scope
       else false
     else skip
+
   (arr, scope) ->
     return skip unless arr.length >= 3
     method = arr.shift()
@@ -202,7 +205,7 @@ default_pattern = __ _,
       if Array.isArray item then copy.push (run item, scope)
       else 
         find_varable = scope.find_varable item
-        if find_varable? then find_varable[item]
+        if find_varable? then copy.push find_varable[item]
         else return skip
     base = copy.shift()
     for item in copy
@@ -249,9 +252,6 @@ run (mk 'echo a')
 run (mk 'a + 30 4')
 run (mk 'echo a')
 console.log '----------------'
-run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['+', '4', '34']]]
-run ['ll', 'qq', 'xx', 'ff']
-console.log '----------------'
 ll (run (mk 'number 2 3 4 4 5'))
 ll (run (mk 'string 23_45'))
 ll (run ['array?', ['array', '2']])
@@ -262,5 +262,21 @@ console.log '----------------'
 run ['var', 'put', ['number', '3']]
 run ['echo', 'var']
 console.log '----------------'
-###
+run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['+', '4', '34']]]
+run ['ll', 'qq', 'xx', 'ff']
+console.log '----------------'
 ll (run ['=', ['number', '3'], ['number', '3'], ['number', '3']])
+ll global_scope.pattern.length
+###
+run [
+  'pattern',
+  ['f', ['x']],
+  [['>', 'x', ['number', '2']],
+    'then', ['+',
+      ['f', ['-', 'x', ['number', '1']]],
+      ['f', ['-', 'x', ['number', '2']]],
+    ]
+    'else', ['number', '1']
+  ]
+]
+ll (run ['f', ['number', '13']])

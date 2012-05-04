@@ -1,6 +1,5 @@
 
-b =
-  a: 4
-  c: -> console.log @a
+f = (x) ->
+  if x <= 2 then 1 else f(x-1) + f(x-2)
 
-b.c()
+console.log (f 13)
