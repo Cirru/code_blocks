@@ -121,8 +121,10 @@ default_pattern = __ _,
     return skip unless arr.shift() is 'bool'
     copy = []
     for item in arr
-      if item in ['yes', 'true', 'on', 'ok'] then copy.push true
-      else if item in ['no', 'false', 'off'] then copy.push false
+      if item in ['yes', 'true', 'on', 'ok', 'right']
+        copy.push true
+      else if item in ['no', 'false', 'off', 'wrong']
+        copy.push false
       else return skip
     if copy.length is 0 then skip
     else if copy.length is 1 then copy[0]
@@ -168,6 +170,30 @@ default_pattern = __ _,
       copy.push (typeis[method] result)
     if copy.length is 1 then copy[0] else copy
 
+  (arr, scope) ->
+    check = arr.shift()
+    return skip unless arr.length >= 2
+    return skip unless Array.isArray check
+    return skip unless arr.shift() is 'then'
+    find_else = arr.indexOf 'else'
+    if find_else is -1 then true_action = arr
+    else 
+      true_action = arr[...find_else]
+      false_action = arr[find_else+1..]
+      return skip if true_action.length is 0
+      return skip if false_action.length is 0
+    right = run check, scope
+    ll 'herer'
+    if right
+      run item, scope for item in true_action[...-1]
+      run true_action[true_action.length-1], scope
+    else if (not right)
+      if false_action?
+        run item, scope for item in false_action[...-1]
+        run false_action[false_action.length-1], scope
+      else false
+    else skip
+
 for item in default_pattern
   global_scope.pattern.push item
 
@@ -178,6 +204,8 @@ typeis =
   string: (item) -> typeof item is 'string'
 
 run = (arr, scope=global_scope) ->
+  # I hope to call the fastest available one
+  # but now I'm only able to use the first available
   for pattern in scope.find_pattern()
     result = pattern arr.concat(), scope
     return result unless result is skip
@@ -190,7 +218,6 @@ ll (run ['var', '=', ['+', '2', '3']], global_scope)
 run ['echo', 'var', 'ert'], global_scope
 ll run ['array', '2', '3'], global_scope
 ll run ['number', '2', ['+', '2', '3'], '4'], global_scope
-###
 
 mk = (str) -> str.split ' '
 
@@ -209,3 +236,12 @@ ll (run ['array?', ['array', '2']])
 run (mk 'new put a')
 run (mk 'log ss')
 # ll (run ['number?', 'a'])
+console.log '----------------'
+run ['var', 'put', ['number', '3']]
+run ['echo', 'var']
+console.log '----------------'
+###
+run __ _,
+  ['bool', 'false']
+  'then', ['echo', ['bool', 'true']]
+  'else', ['echo', ['bool', 'false']]
