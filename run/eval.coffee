@@ -56,14 +56,21 @@ default_pattern = __ _,
     result
 
   (arr, scope) ->
+    ll arr
     return skip unless arr[1] in ['put', '=']
     return skip unless arr.length >= 3
     varable = arr[0]
-    args = arr[2..].map (item) ->
-      if Array.isArray item then run item, scope else item
+    args = arr[2..]
+    copy = []
+    for item in args
+      if Array.isArray item then copy.push (run item, scope)
+      else
+        find_varable = scope.find_varable item
+        return skip unless find_varable?
+        copy.push find_varable[item]
     find_varable = scope.find_varable varable
     target = if find_varable? then find_varable else scope
-    value = if args.length is 1 then args[0] else args
+    value = if copy.length is 1 then copy[0] else copy
     target.varable[varable] = value
 
   (arr, scope) ->
@@ -145,9 +152,11 @@ default_pattern = __ _,
     new_pattern
 
   (arr, scope) ->
-    return skip unless arr.shift() is 'array?'
+    method = arr.shift()
+    method_tail = method[method.length-1]
+    method = method[...-1]
+    return skip unless method_tail is '?' and typeis[method]?
     copy = []
-    ll arr
     for item in arr
       if Array.isArray item
         result = run item, scope
@@ -156,16 +165,23 @@ default_pattern = __ _,
         varable = scope.find_varable item
         if varable? then result = varable[item]
         else return skip
-      copy.push (Array.isArray item)
+      copy.push (typeis[method] result)
     if copy.length is 1 then copy[0] else copy
 
 for item in default_pattern
   global_scope.pattern.push item
 
+typeis =
+  array:  Array.isArray
+  number: (item) -> not (isNaN item)
+  bool:   (item) -> item in [true, false]
+  string: (item) -> typeof item is 'string'
+
 run = (arr, scope=global_scope) ->
   for pattern in scope.find_pattern()
     result = pattern arr.concat(), scope
     return result unless result is skip
+  ll '::::pattern::::\n', arr
   throw new Error 'no pattern found'
 
 ###
@@ -184,9 +200,12 @@ run (mk 'echo a')
 run (mk 'a + 30 4')
 run (mk 'echo a')
 console.log '----------------'
-run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['string', '444']]]
+run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['+', '4', '34']]]
 run ['ll', 'qq', 'xx', 'ff']
 console.log '----------------'
 ll (run (mk 'number 2 3 4 4 5'))
 ll (run (mk 'string 23_45'))
 ll (run ['array?', ['array', '2']])
+run (mk 'new put a')
+run (mk 'log ss')
+# ll (run ['number?', 'a'])
