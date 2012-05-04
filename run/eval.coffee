@@ -193,6 +193,22 @@ default_pattern = __ _,
         run false_action[false_action.length-1], scope
       else false
     else skip
+  (arr, scope) ->
+    return skip unless arr.length >= 3
+    method = arr.shift()
+    return skip unless compare[method]?
+    copy = []
+    for item in arr
+      if Array.isArray item then copy.push (run item, scope)
+      else 
+        find_varable = scope.find_varable item
+        if find_varable? then find_varable[item]
+        else return skip
+    base = copy.shift()
+    for item in copy
+      return false unless compare[method] base, item
+      base = item
+    true
 
 for item in default_pattern
   global_scope.pattern.push item
@@ -202,6 +218,12 @@ typeis =
   number: (item) -> not (isNaN item)
   bool:   (item) -> item in [true, false]
   string: (item) -> typeof item is 'string'
+compare =
+  '=': (x, y) -> x is y
+  '>': (x, y) -> x > y
+  '<': (x, y) -> x < y
+  '<=': (x, y) -> x <= y
+  '>=': (x, y) -> x >= y
 
 run = (arr, scope=global_scope) ->
   # I hope to call the fastest available one
@@ -241,7 +263,4 @@ run ['var', 'put', ['number', '3']]
 run ['echo', 'var']
 console.log '----------------'
 ###
-run __ _,
-  ['bool', 'false']
-  'then', ['echo', ['bool', 'true']]
-  'else', ['echo', ['bool', 'false']]
+ll (run ['=', ['number', '3'], ['number', '3'], ['number', '3']])
