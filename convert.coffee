@@ -17,19 +17,23 @@ cursor = '\t'
 render_cursor = '<nav>&nbsp;</nav>'
 draw = (arr) ->
   str = ''
+  now_level = ''
   for item in arr
     if Array.isArray item
       str+= draw item
     else if item is cursor
       str+= render_cursor
+      now_level = ' id="now_level"'
     else
+      if (item.indexOf cursor) >=0
+        now_level = ' id="now_level"'
       item = item.replace(cursor, render_cursor)
         .replace(/\s/g, '<span class="appear">&nbsp;</span>')
       str+= "<code>#{item}</code>"
   inline_block = ''
   if arr.toString().length < 15
     inline_block = ' class="inline_block"'
-  "<div#{inline_block}>#{str}</div>"
+  "<div#{inline_block}#{now_level}>#{str}</div>"
 
 editor_mode = on
 store = ['\t']
@@ -62,6 +66,7 @@ window.onload = ->
       false
   document.onkeydown = (e) ->
     code = e.keyCode
+    console.log code
     unless editor_mode
       unless code is 27 then return 'locked'
     # console.log 'keyCode .... ', code, e.ctrlKey
@@ -75,10 +80,9 @@ window.onload = ->
     if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
         send_back = do control['c_'+code]
-        unless send_back is 'no need to refresh'
-          unless code in [89, 90]
-            do refresh
-            do history_generator
+        unless send_back is 'stay'
+          do refresh
+          do history_generator
         false
 
 input_recursion = (arr, char) ->
@@ -321,21 +325,21 @@ ctrl_copy = ->
   # console.log snippet
 
 cut_recursion = (arr) ->
+  console.log arr
   arr.map (item) ->
     if Array.isArray item
       if cursor in item
         snippet = item.filter (x) -> x isnt cursor
-        return cursor
-      else return item
+        cursor
+      else cut_recursion item
     else
-      if (item.indexOf cursor) < 0 then return item
+      if (item.indexOf cursor) < 0 then item
       else 
         snippet = item.replace cursor, ''
-        return cursor
+        cursor
 ctrl_cut = ->
-  if cursor in store then return 'skip'
+  if cursor in store then return skip
   store = cut_recursion store
-  # console.log snippet
 
 paste_recursion = (arr) ->
   copy = []
@@ -378,7 +382,7 @@ save_version = ->
     store: store
     stemp: do stemp
     child: []
-    commit: prompt('add phrase to commit')
+    commit: prompt('add phrase to commit') or 'Save'
   )
   last_item = version_cursor.child
   # console.log 'last_item: ', last_item
@@ -432,6 +436,7 @@ go_ahead = ->
     store = history[current+1]
     current+= 1
     (tag 'box').innerHTML = draw store
+  'stay'
 
 go_back = ->
   console.log 'current: ', current
@@ -439,6 +444,31 @@ go_back = ->
     store = history[current-1]
     current-= 1
     (tag 'box').innerHTML = draw store
+  'stay'
+
+source = (arr) ->
+  copy = []
+  for item in arr
+    if item in [cursor, [cursor]] then continue
+    else if Array.isArray item then copy.push (source item)
+    else if (item.indexOf cursor) is -1 then copy.push item
+    else copy.push item.replace(cursor, '')
+  copy
+
+output = []
+run_code = ->
+  output = []
+  console.log (source store)
+  run item for item in (source store)
+  output = output.map (item) ->
+    item.replace(/\s/g, '&nbsp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  .join '<br>'
+  console.log 'output', output
+  (tag 'box').innerHTML = "<div id='result'>#{output}</div>"
+  editor_mode = off
+  'stay'
 
 control =
   '8':  cancel
@@ -463,3 +493,4 @@ control =
   'c_83': save_version
   'c_90': go_back
   'c_89': go_ahead
+  'c_69': run_code

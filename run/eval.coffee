@@ -16,7 +16,7 @@ new_scope = (parent) ->
 global_scope =
   pattern: []
   varable: {}
-  find_varable: (str, scope) ->
+  find_varable: (str, scope)->
     if @varable[str]? then @varable else undefined
   find_pattern: -> @pattern
 
@@ -38,6 +38,7 @@ default_pattern = __ _,
       return skip unless (target = find_varable)?
       arr.unshift target[varable]
     args = []
+    console.log 'plus'
     for item in arr
       if Array.isArray item then args.push (run item, scope)
       else 
@@ -67,9 +68,9 @@ default_pattern = __ _,
         return skip unless find_varable?
         copy.push find_varable[item]
     find_varable = scope.find_varable varable
-    target = if find_varable? then find_varable else scope
+    target = if find_varable? then find_varable else scope.varable
     value = if copy.length is 1 then copy[0] else copy
-    target.varable[varable] = value
+    target[varable] = value
 
   (arr, scope) ->
     return skip unless arr[0] in ['echo', 'log']
@@ -81,7 +82,8 @@ default_pattern = __ _,
         find_varable = scope.find_varable item
         if find_varable? then find_varable[item]
         else '(undefined)'
-    console.log.apply scope, content
+    output.push (String content)
+    console.log content
     content
 
   (arr, scope) ->
@@ -234,49 +236,5 @@ run = (arr, scope=global_scope) ->
   for pattern in scope.find_pattern()
     result = pattern arr.concat(), scope
     return result unless result is skip
-  ll '::::pattern::::\n', arr
+  console.log '::::pattern::::\n', arr
   throw new Error 'no pattern found'
-
-###
-ll (run ['+', '2', ['/', '3', '3']], global_scope)
-ll (run ['var', '=', ['+', '2', '3']], global_scope)
-run ['echo', 'var', 'ert'], global_scope
-ll run ['array', '2', '3'], global_scope
-ll run ['number', '2', ['+', '2', '3'], '4'], global_scope
-
-mk = (str) -> str.split ' '
-
-run (mk 'echo a')
-run ['a', 'put', ['number', '3']]
-run (mk 'echo a')
-run (mk 'a + 30 4')
-run (mk 'echo a')
-console.log '----------------'
-ll (run (mk 'number 2 3 4 4 5'))
-ll (run (mk 'string 23_45'))
-ll (run ['array?', ['array', '2']])
-run (mk 'new put a')
-run (mk 'log ss')
-# ll (run ['number?', 'a'])
-console.log '----------------'
-run ['var', 'put', ['number', '3']]
-run ['echo', 'var']
-console.log '----------------'
-run ['pattern', ['ll', ['b'], 'xx', ['c']], ['echo', ['+', '4', '34']]]
-run ['ll', 'qq', 'xx', 'ff']
-console.log '----------------'
-ll (run ['=', ['number', '3'], ['number', '3'], ['number', '3']])
-ll global_scope.pattern.length
-###
-run [
-  'pattern',
-  ['f', ['x']],
-  [['>', 'x', ['number', '2']],
-    'then', ['+',
-      ['f', ['-', 'x', ['number', '1']]],
-      ['f', ['-', 'x', ['number', '2']]],
-    ]
-    'else', ['number', '1']
-  ]
-]
-ll (run ['f', ['number', '13']])
