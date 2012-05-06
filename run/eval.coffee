@@ -27,10 +27,10 @@ skip = 'skip while pattern not matching'
 
 default_pattern = __ _,
   (arr, scope) ->
-    if arr[1] in ('+-*/%'.split '')
+    if arr[1] in ['+', '-', '*', '/', '%']
       varable = arr.shift()
       method = arr.shift()
-    else if arr[0] in ('+-*/%'.split '')
+    else if arr[0] in ['+', '-', '*', '/', '%']
       method = arr.shift()
     else return skip
     if varable?
@@ -38,7 +38,6 @@ default_pattern = __ _,
       return skip unless (target = find_varable)?
       arr.unshift target[varable]
     args = []
-    console.log 'plus'
     for item in arr
       if Array.isArray item then args.push (run item, scope)
       else 
@@ -56,8 +55,8 @@ default_pattern = __ _,
     result
 
   (arr, scope) ->
-    return skip unless arr[1] in ['put', '=']
     return skip unless arr.length >= 3
+    return skip unless arr[1] in ['put', '=']
     varable = arr[0]
     args = arr[2..]
     copy = []
