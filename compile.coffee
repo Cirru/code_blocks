@@ -9,6 +9,7 @@ jade_file   = 'html.jade'
 stylus_file = 'page.styl'
 
 fs.watchFile coffee_file, (e) ->
+  console.log e
   result = spawn 'coffee', ['-bc', coffee_file]
   msg = ''
   result.stderr.on 'data', (str) ->
