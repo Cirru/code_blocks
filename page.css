@@ -14,26 +14,31 @@ code {
   letter-spacing: 1px;
   white-space: nowrap;
   color: #fff;
-  border-bottom: solid 1px #cfcffc;
   font-size: 14px;
+  border-bottom: solid 1px #b6b6fb;
 }
 div {
-  margin: 4px 13px;
+  margin: 1px 13px;
   padding: 1px 4px;
-  border-left: solid 1px #cfcffc;
+  border-left: solid 1px #b8b8ff;
+  -webkit-border-radius: 3px;
 }
 nav {
   display: inline-block;
-  background: #000;
+  background: #fff;
   margin: -1px;
   width: 2px;
 }
 .inline {
   display: inline-block;
   margin: 0px 2px;
-  padding-top: 2px;
-  border-top: solid 1px #cfcffc;
-  border-left: none;
+  padding-bottom: 4px;
+  border: solid 1px #cfcffc;
+  border-width: 0px 1px 0px 1px;
+  -webkit-border-radius: 7px;
+  border: solid 1px #cfcffc;
+  border-width: 0px 1px 0px 1px;
+  -webkit-border-radius: 7px;
 }
 footer {
   border: solid 1px #d6d65c;
@@ -41,7 +46,7 @@ footer {
   padding: 1px;
   display: inline-block;
   vertical-align: top;
-  -webkit-border-radius: 8px;
+  -webkit-border-radius: 4px;
 }
 #box>* {
   margin: 10px;
@@ -51,18 +56,12 @@ header {
   height: 16px;
   margin: 1px;
   padding: 1px;
-  color: #fff;
-  font-size: 13px;
-  background: #fad1d1;
+  color: #cfcffc;
   display: inline-block;
-  -webkit-border-radius: 3px;
-}
-span {
-  font-size: 10px;
-  color: #e8a17d;
+  background: #fff;
 }
 #result {
   font-size: 17px;
   margin-left: 40px;
-  background: #cfcffc;
+  background: #808aff;
 }

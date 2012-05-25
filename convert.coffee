@@ -15,15 +15,23 @@ add_inputs = valid_chars.split ''
 
 cursor = '\t'
 cur_ = '<nav>&nbsp;</nav>'
-draw = (arr) ->
+draw = (arr, can_fold=yes) ->
+  surr = no if arr.toString().length > 50
+  surr = no if arr.map((x)->
+    if Array.isArray x then 1 else 0).reduce((x,y) ->
+      x + y) > 2
   str = ''
   for item in arr
-    if Array.isArray item then str+= draw item else
+    if Array.isArray item then str+= draw item, surr else
       item = item.replace(cursor, cur_)
         .replace(/\s/g, '&nbsp;')
       str+= "<code>#{item}</code>"
   inline = ''
-  "<div>#{str}</div>"
+  if can_fold
+    if (arr.every (x) -> typeof x is 'string')
+      if arr.join('').length < 30
+        inline = ' class="inline"'
+  "<div#{inline}>#{str}</div>"
 
 editor_mode = on
 store = ['\t']
@@ -35,7 +43,7 @@ stay = 'stay'
 
 history_maker = ->
   history = history[..current]
-  history.push store
+  history.push store.concat()
   current+= 1
 
 window.onload = ->
@@ -152,10 +160,17 @@ pgup = ->
   if store[0] is cursor then return 'skip'
   store = pgup_R store
 
-pgdown = ->
+reverse = (arr) ->
+  arr.reverse().map (item) ->
+    if Array.isArray item then reverse item
+    else item.split('').reverse().join ''
+
+reverse_action = (action) ->
   store = reverse store
-  do pgup
+  do action
   store = reverse store
+
+pgdown = -> reverse_action pgup
 
 home_R = (arr) ->
   if cursor in arr and (arr[0] isnt cursor)
@@ -176,16 +191,6 @@ home_R = (arr) ->
 home = ->
   if store[0]? and store[0] is cursor then return skip
   store = home_R store
-
-reverse = (arr) ->
-  arr.reverse().map (item) ->
-    if Array.isArray item then reverse item
-    else item.split('').reverse().join ''
-
-reverse_action = (action) ->
-  store = reverse store
-  do action
-  store = reverse store
 
 end = -> reverse_action home
 
@@ -261,11 +266,11 @@ down = ->
 
 up = -> reverse_action down
 
-left_step_recursion = (arr) ->
+left_step_R = (arr) ->
   if arr[0] is cursor then return arr
   copy = []
   for item in arr
-    if Array.isArray item then copy.push (left_step_recursion item)
+    if Array.isArray item then copy.push (left_step_R item)
     else if item is cursor
       last_item = copy.pop()
       copy.push cursor, last_item
@@ -274,7 +279,7 @@ left_step_recursion = (arr) ->
       else copy.push cursor, item.replace(cursor, '')
   copy
 left_step = ->
-  store = left_step_recursion store
+  store = left_step_R store
 
 right_step = -> reverse_action left_step
 
@@ -350,10 +355,8 @@ save_version = ->
     store: store
     stemp: do stemp
     child: []
-    commit: prompt('add phrase to commit') or 'Save'
-  )
+    commit: prompt('add phrase to commit') or 'Save')
   last_item = version_cursor.child
-  # console.log 'last_item: ', last_item
   version_cursor = version_cursor.child[last_item.length-1]
   version_cursor.child.push cursor
   do history_reset
