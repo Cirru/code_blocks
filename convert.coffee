@@ -43,21 +43,25 @@ current = 0
 skip = 'skip'
 stay = 'stay'
 
-history_maker = ->
+history_make = (store) ->
   history = history[..current]
-  history.push store.concat()
+  console.log ":::", store
+  history.push store
+  console.log "###", history[history.length-1]
   current+= 1
   socket.emit 'sync', store if socket?
 
 window.onload = ->
   box = tag 'box'
   window.focus()
-  do refresh = ->
+  refresh = (store) ->
+    console.log store
     box.innerHTML = draw store
+    history_make store.concat()
 
   if io? then socket.on 'new', (data) ->
     store = data
-    do refresh
+    refresh store
 
   document.onkeypress = (e) ->
     unless editor_mode then return 'locked'
@@ -65,8 +69,7 @@ window.onload = ->
     unless e.ctrlKey or e.altKey
       if char in add_inputs
         input char
-        do refresh
-        do history_maker
+        refresh store
       false
 
   document.onkeydown = (e) ->
@@ -78,15 +81,13 @@ window.onload = ->
       if control[''+code]?
         send_back = do control[''+code]
         unless send_back is stay
-          do refresh
-          do history_maker
+          refresh store
         false
     else if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
         send_back = do control['c_'+code]
         unless send_back is stay
-          do refresh
-          do history_maker
+          refresh store
         false
 
 input_R = (arr, char) ->
@@ -286,8 +287,7 @@ left_step_R = (arr) ->
       if (item.indexOf cursor) is -1 then copy.push item
       else copy.push cursor, item.replace(cursor, '')
   copy
-left_step = ->
-  store = left_step_R store
+left_step = -> store = left_step_R store
 
 right_step = -> reverse_action left_step
 
@@ -301,9 +301,7 @@ copy_recursion = (arr) ->
       else copy_recursion item
     else if item.indexOf(cursor) >= 0
       snippet = item.replace cursor, ''
-ctrl_copy = ->
-  copy_recursion store
-  # console.log snippet
+ctrl_copy = -> copy_recursion store
 
 cut_recursion = (arr) ->
   console.log arr
