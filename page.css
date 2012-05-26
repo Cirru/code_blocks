@@ -2,6 +2,7 @@ body {
   margin: 0px;
   font-family: monospace;
   background: #808aff;
+  padding-bottom: 700px;
 }
 #box {
   width: 100%;
@@ -18,10 +19,10 @@ code {
   border-bottom: solid 1px #b6b6fb;
 }
 div {
-  margin: 1px 13px;
+  margin: 4px 13px;
   padding: 1px 4px;
   border-left: solid 1px #b8b8ff;
-  -webkit-border-radius: 3px;
+  -webkit-border-radius: 6px;
 }
 nav {
   display: inline-block;

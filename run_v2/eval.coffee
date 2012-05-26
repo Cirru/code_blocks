@@ -46,12 +46,12 @@ scope_zero.here =
     if v.length is 1 then v[0] else v
   string: (scope, v) -> v.join(' ')
   def: (scope, v) ->
-    here = (scope.seek v[0]) or scope.here
-    here[v[0]] = (scope_in, arr) ->
+    here = (scope.seek v[0][0]) or scope.here
+    here[v[0][0]] = (scope_in, arr) ->
       scope_sub = scope_new scope
-      for item, index in v[1]
+      for item, index in v[0][1..]
         scope_sub.here[item] = read scope_in, arr[index]
-      runit scope_sub, exp for exp in v[2..]
+      runit scope_sub, exp for exp in v[1..]
   if: (scope, v) ->
     if runit scope, v[0] then runit scope, v[1]
     else runit scope, v[2]

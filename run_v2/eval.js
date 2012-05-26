@@ -104,16 +104,16 @@ scope_zero.here = {
   },
   def: function(scope, v) {
     var here;
-    here = (scope.seek(v[0])) || scope.here;
-    return here[v[0]] = function(scope_in, arr) {
+    here = (scope.seek(v[0][0])) || scope.here;
+    return here[v[0][0]] = function(scope_in, arr) {
       var exp, index, item, scope_sub, _i, _j, _len, _len1, _ref, _ref1, _results;
       scope_sub = scope_new(scope);
-      _ref = v[1];
+      _ref = v[0].slice(1);
       for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
         item = _ref[index];
         scope_sub.here[item] = read(scope_in, arr[index]);
       }
-      _ref1 = v.slice(2);
+      _ref1 = v.slice(1);
       _results = [];
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         exp = _ref1[_j];
