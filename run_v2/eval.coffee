@@ -16,7 +16,10 @@ scope_new = (parent) ->
 
 runit = (scope, arr) ->
   here = scope.seek arr[0]
-  unless here? then err 'no function found' else
+  unless here?
+    console.log arr
+    err 'no function found'
+  else
     here[arr[0]] scope, arr[1..]
 
 read = (scope, x) ->
@@ -34,7 +37,8 @@ scope_zero.here =
     echo.apply console, v
     v
   '+': (scope, v) ->
-    v.map((x)-> read scope, x).reduce((x,y)-> x+y)
+    v.map((x)-> read scope, x).reduce (x, y) ->
+      (Number x) + (Number y)
   '-': (scope, v) ->
     v.map((x)-> read scope, x).reduce((x,y)-> x-y)
   number: (scope, v) ->
@@ -43,10 +47,10 @@ scope_zero.here =
   string: (scope, v) -> v.join(' ')
   def: (scope, v) ->
     here = (scope.seek v[0]) or scope.here
-    scope_sub = scope_new scope
     here[v[0]] = (scope_in, arr) ->
+      scope_sub = scope_new scope
       for item, index in v[1]
-        scope_sub.here[item] = read scope, arr[index]
+        scope_sub.here[item] = read scope_in, arr[index]
       runit scope_sub, exp for exp in v[2..]
   if: (scope, v) ->
     if runit scope, v[0] then runit scope, v[1]

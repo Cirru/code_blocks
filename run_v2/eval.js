@@ -39,6 +39,7 @@ runit = function(scope, arr) {
   var here;
   here = scope.seek(arr[0]);
   if (here == null) {
+    console.log(arr);
     return err('no function found');
   } else {
     return here[arr[0]](scope, arr.slice(1));
@@ -78,7 +79,7 @@ scope_zero.here = {
     return v.map(function(x) {
       return read(scope, x);
     }).reduce(function(x, y) {
-      return x + y;
+      return (Number(x)) + (Number(y));
     });
   },
   '-': function(scope, v) {
@@ -102,15 +103,15 @@ scope_zero.here = {
     return v.join(' ');
   },
   def: function(scope, v) {
-    var here, scope_sub;
+    var here;
     here = (scope.seek(v[0])) || scope.here;
-    scope_sub = scope_new(scope);
     return here[v[0]] = function(scope_in, arr) {
-      var exp, index, item, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var exp, index, item, scope_sub, _i, _j, _len, _len1, _ref, _ref1, _results;
+      scope_sub = scope_new(scope);
       _ref = v[1];
       for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
         item = _ref[index];
-        scope_sub.here[item] = read(scope, arr[index]);
+        scope_sub.here[item] = read(scope_in, arr[index]);
       }
       _ref1 = v.slice(2);
       _results = [];

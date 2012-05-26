@@ -6,6 +6,8 @@ ll = (v...) ->
     time = new Date().getTime()
     console.log time, item
 
+socket = io.connect 'http://localhost:8000' if io?
+
 keymap = ''
 valid_chars = 'abcdefghijjklmnopqrstuvwxyz' +
   'ABCDEFGHIJJKLMNOPQRSTUVWXYZ' +
@@ -45,11 +47,17 @@ history_maker = ->
   history = history[..current]
   history.push store.concat()
   current+= 1
+  socket.emit 'sync', store if socket?
 
 window.onload = ->
   box = tag 'box'
   window.focus()
-  do refresh = -> box.innerHTML = draw store
+  do refresh = ->
+    box.innerHTML = draw store
+
+  if io? then socket.on 'new', (data) ->
+    store = data
+    do refresh
 
   document.onkeypress = (e) ->
     unless editor_mode then return 'locked'
