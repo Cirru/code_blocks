@@ -1,6 +1,8 @@
 
 tag = (id) -> document.getElementById id
 new_footer = -> document.createElement 'footer'
+arr_copy = (arr) -> arr.map (x) ->
+  if Array.isArray x then arr_copy x else x
 ll = (v...) ->
   for item in v
     time = new Date().getTime()
@@ -23,8 +25,10 @@ draw = (arr, can_fold=yes) ->
     if Array.isArray x then 1 else 0).reduce((x,y) ->
       x + y) > 2
   str = ''
-  for item in arr
-    if Array.isArray item then str+= draw item, surr else
+  for item, index in arr
+    if Array.isArray item
+      str+= draw item, (if index is 1 then true else surr)
+    else
       item = item.replace(cursor, cur_)
         .replace(/\s/g, '&nbsp;')
       str+= "<code>#{item}</code>"
@@ -46,22 +50,24 @@ stay = 'stay'
 history_make = (store) ->
   history = history[..current]
   console.log ":::", store
-  history.push store
+  history.push (arr_copy store)
   console.log "###", history[history.length-1]
   current+= 1
   socket.emit 'sync', store if socket?
 
+
 window.onload = ->
   box = tag 'box'
   window.focus()
-  refresh = (store) ->
-    console.log store
+  
+  do refresh = ->
+    # console.log store
     box.innerHTML = draw store
     history_make store.concat()
 
   if io? then socket.on 'new', (data) ->
     store = data
-    refresh store
+    do refresh
 
   document.onkeypress = (e) ->
     unless editor_mode then return 'locked'
@@ -69,7 +75,7 @@ window.onload = ->
     unless e.ctrlKey or e.altKey
       if char in add_inputs
         input char
-        refresh store
+        do refresh
       false
 
   document.onkeydown = (e) ->
@@ -81,13 +87,13 @@ window.onload = ->
       if control[''+code]?
         send_back = do control[''+code]
         unless send_back is stay
-          refresh store
+          do refresh
         false
     else if e.ctrlKey and (not e.altKey)
       if control['c_'+code]?
         send_back = do control['c_'+code]
         unless send_back is stay
-          refresh store
+          do refresh
         false
 
 input_R = (arr, char) ->

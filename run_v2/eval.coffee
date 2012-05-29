@@ -4,15 +4,16 @@ err = (str) -> throw new Error str
 
 scope_zero =
   here: {}
-  seek: (key) ->
-    if @here[key]? then @here else undefined
+  seek: (key) -> @here
 
 scope_new = (parent) ->
   obj =
     here: {}
     parent: parent
     seek: (key) ->
-      if @here[key]? then @here else @parent.seek key
+      upper = @parent.seek key
+      if (not @here[key]?) and upper? then upper
+      else @here
 
 runit = (scope, arr) ->
   here = scope.seek arr[0]
@@ -28,23 +29,30 @@ read = (scope, x) ->
     here[x]
 
 scope_zero.here =
+
   set: (scope, v) ->
-    here = (scope.seek v[0]) or scope.here
-    if v.length is 2 then here[v[0]] = read scope, v[1]
-    else here[v[0]] = v[1..].map (x) -> read scope, x
+    (scope.seek v[0])[v[0]] = (
+      if v.length is 2 then read scope, v[1]
+      else v[1..].map (x) -> read scope, x)
+
   echo: (scope, v) ->
     v = v.map (x) -> read scope, x
     echo.apply console, v
     v
+
   '+': (scope, v) ->
     v.map((x)-> read scope, x).reduce (x, y) ->
       (Number x) + (Number y)
+
   '-': (scope, v) ->
     v.map((x)-> read scope, x).reduce((x,y)-> x-y)
+
   number: (scope, v) ->
     v = v.map (x) -> Number x
     if v.length is 1 then v[0] else v
+
   string: (scope, v) -> v.join(' ')
+
   def: (scope, v) ->
     here = (scope.seek v[0][0]) or scope.here
     here[v[0][0]] = (scope_in, arr) ->
@@ -52,9 +60,11 @@ scope_zero.here =
       for item, index in v[0][1..]
         scope_sub.here[item] = read scope_in, arr[index]
       runit scope_sub, exp for exp in v[1..]
+
   if: (scope, v) ->
-    if runit scope, v[0] then runit scope, v[1]
-    else runit scope, v[2]
+    if runit scope, v[0] then read scope, v[1]
+    else read scope, v[2]
+
   '>': (scope, v) ->
     v = v.map (x) -> read scope, x
     base = v.shift()

@@ -12,11 +12,7 @@ err = function(str) {
 scope_zero = {
   here: {},
   seek: function(key) {
-    if (this.here[key] != null) {
-      return this.here;
-    } else {
-      return void 0;
-    }
+    return this.here;
   }
 };
 
@@ -26,10 +22,12 @@ scope_new = function(parent) {
     here: {},
     parent: parent,
     seek: function(key) {
-      if (this.here[key] != null) {
-        return this.here;
+      var upper;
+      upper = this.parent.seek(key);
+      if ((!(this.here[key] != null)) && (upper != null)) {
+        return upper;
       } else {
-        return this.parent.seek(key);
+        return this.here;
       }
     }
   };
@@ -124,9 +122,9 @@ scope_zero.here = {
   },
   "if": function(scope, v) {
     if (runit(scope, v[0])) {
-      return runit(scope, v[1]);
+      return read(scope, v[1]);
     } else {
-      return runit(scope, v[2]);
+      return read(scope, v[2]);
     }
   },
   '>': function(scope, v) {
