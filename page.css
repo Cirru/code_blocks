@@ -16,7 +16,7 @@ code {
   white-space: nowrap;
   color: #fff;
   font-size: 14px;
-  border-bottom: solid 1px #b6b6fb;
+  border-bottom: solid 1px #c0c0fc;
 }
 div {
   margin: 4px 13px;
@@ -51,6 +51,7 @@ footer {
 }
 #box>* {
   margin: 10px;
+  border: 0px;
 }
 header {
   width: 70px;

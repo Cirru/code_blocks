@@ -27,7 +27,12 @@ draw = (arr, can_fold=yes) ->
   str = ''
   for item, index in arr
     if Array.isArray item
-      str+= draw item, (if index is 1 then true else surr)
+      surr_sub = surr
+      if not surr
+        if index is 1
+          if (typeof arr[0]) is 'string'
+            surr_sub = yes
+      str+= draw item, surr_sub
     else
       item = item.replace(cursor, cur_)
         .replace(/\s/g, '&nbsp;')

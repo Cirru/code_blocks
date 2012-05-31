@@ -48,7 +48,7 @@ cursor = '\t';
 cur_ = '<nav>&nbsp;</nav>';
 
 draw = function(arr, can_fold) {
-  var index, inline, item, str, surr, _i, _len;
+  var index, inline, item, str, surr, surr_sub, _i, _len;
   if (can_fold == null) {
     can_fold = true;
   }
@@ -70,7 +70,15 @@ draw = function(arr, can_fold) {
   for (index = _i = 0, _len = arr.length; _i < _len; index = ++_i) {
     item = arr[index];
     if (Array.isArray(item)) {
-      str += draw(item, (index === 1 ? true : surr));
+      surr_sub = surr;
+      if (!surr) {
+        if (index === 1) {
+          if ((typeof arr[0]) === 'string') {
+            surr_sub = true;
+          }
+        }
+      }
+      str += draw(item, surr_sub);
     } else {
       item = item.replace(cursor, cur_).replace(/\s/g, '&nbsp;');
       str += "<code>" + item + "</code>";
